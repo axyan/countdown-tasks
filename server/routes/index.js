@@ -1,8 +1,12 @@
 const express = require('express');
-const router = express.Router();
+const indexRouter = express.Router();
 
-router.get('/', (req, res, next) => {
+const authRouter = require('./auth');
+
+indexRouter.get('/', (req, res, next) => {
   res.send('NOT IMPLEMENTED: GET index');
 });
 
-module.exports = router;
+indexRouter.use(authRouter);
+
+module.exports = indexRouter;
