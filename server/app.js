@@ -2,12 +2,16 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const createError = require('http-errors');
 const logger = require('morgan');
-const path = require('path');
+
+const passport = require('passport');
 
 const db = require('./config/database');
 const indexRouter = require('./routes/index');
 
 const app = express();
+
+// Passport setup
+require('./config/passport')
 
 app.use(logger('dev'));
 app.use(express.json());
