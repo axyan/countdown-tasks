@@ -1,12 +1,24 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const createError = require('http-errors');
+
+const passport = require('passport');
 
 const indexRouter = require('../routes/index');
 
 const app = express();
 
+// Test environment variable setup
+require('dotenv').config({
+  path: './.env.test'
+});
+
+// Passport setup
+require('../config/passport')
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 app.use('/', indexRouter);
 

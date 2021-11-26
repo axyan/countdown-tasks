@@ -1,11 +1,12 @@
 const express = require('express');
 const request = require('supertest');
+const bcrypt = require('bcryptjs');
 
 const app = require('./app.js');
 const mongoTestServer = require('./mongoTestServer');
 const User = require('../models/user');
 
-/** Test POST to /signup **/
+/** Test POST for '/signup' **/
 describe('POST /signup Test Suite', () => {
 
   beforeAll(async () => await mongoTestServer.initialize());
@@ -79,5 +80,43 @@ describe('POST /signup Test Suite', () => {
 
     expect(res.body.error).toBeDefined();
     expect(res.body.error).toMatch('Passwords do not match');
+  });
+});
+
+/** Test POST for '/login' **/
+describe('POST /login Test Suite', () => {
+
+  beforeAll(async () => {
+    await mongoTestServer.initialize();
+
+    new User({
+      email: 'picklerick@c137.com',
+      password: await bcrypt.hash('vindicators', 10)
+    }).save((err) => {
+      if (err) { throw err }
+    });
+
+    new User({
+      email: 'evilmorty@c137.com',
+      password: await bcrypt.hash('jessica', 10)
+    }).save((err) => {
+      if (err) { throw err }
+    });
+  });
+
+  afterAll(async () => await mongoTestServer.terminate());
+
+  test('successful login should return a token', async () => {
+    const res = await request(app)
+      .post('/login')
+      .set('Accept', 'application/json')
+      .send({
+        email: 'picklerick@c137.com',
+        password: 'vindicators'
+      })
+      .expect(200);
+
+    expect(res.body.success).toBeTruthy();
+    expect(res.body.token).toBeDefined();
   });
 });

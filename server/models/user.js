@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const { isEmail } = require('validator');
 
 const Schema = mongoose.Schema;
@@ -14,6 +15,14 @@ const userSchema = new Schema({
     }
   },
   password: { type: String, required: true, maxLength: 100 },
+});
+
+// User instance method to compare passwords
+userSchema.method('verifyPassword', function(passwordInput, cb) {
+  bcrypt.compare(passwordInput, this.password, (err, isMatch) => {
+    if (err) { return cb(err) };
+    cb(null, isMatch);
+  });
 });
 
 // Virtual to get user url

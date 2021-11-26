@@ -8,13 +8,18 @@
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.1",
     "express-validator": "^6.13.0",
     "http-errors": "^1.8.1",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.13",
     "morgan": "~1.9.1",
+    "passport": "^0.5.0",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0",
     "validator": "^13.7.0"
   },
   "devDependencies": {
@@ -29,10 +34,5 @@
     "coveragePathIgnorePatterns": [
       "/node_modules"
     ]
-  },
-  "config": {
-    "mongodbMemoryServer": {
-      "downloadUrl": "https://fastdl.mongodb.org/linux/mongodb-linux-aarch64-rhel82-5.0.4.tgz"
-    }
   }
 }
