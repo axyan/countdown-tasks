@@ -11,13 +11,13 @@ exports.signupPost = [
   // Sanitize and validate inputs
   body('email', 'Invalid email format')
     .trim()
-    .not().isEmpty().bail()
+    .not().isEmpty().withMessage('Email is required').bail()
     .isEmail().bail()
     .normalizeEmail()
     .escape(),
   body('password', 'Password needs to be between 8 and 64 characters')
     .trim()
-    .isLength({ min: 8, max: 64 })
+    .isLength({ min: 8, max: 64 }).bail()
     .escape(),
   body('confirmPassword', 'Passwords do not match')
     .trim()
@@ -26,7 +26,7 @@ exports.signupPost = [
     .escape(),
 
   // Check for validaton errors and save new user
-  ((req, res, next) => {
+  (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -64,7 +64,7 @@ exports.signupPost = [
         }
       }));
     }
-  })
+  }
 ];
 
 // Handle POST for '/login'
@@ -92,52 +92,70 @@ exports.loginPost = [
         success: false,
         error: validationError.msg
       });
-    }
     
-    // Authenticate user provided email and password
-    passport.authenticate('local', { session: false }, (err, user, info) => {
+    // No validation errors
+    } else {
+      // Authenticate user provided email and password
+      passport.authenticate('local', { session: false }, (err, user, info) => {
 
-      // Error during authentication
-      if (err) {
-        res.status(200).json({
-          success: false,
-          error: 'Error during authentication'
-        });
-        next(err);
-      
-      // User not found
-      } else if (!user) {
-        res.status(200).json({
-          success: false,
-          error: 'Invalid email or password'
-        });
+        // Error during authentication
+        if (err) {
+          res.status(200).json({
+            success: false,
+            error: 'Error during authentication'
+          });
+          next(err);
+        
+        // User not found
+        } else if (!user) {
+          res.status(200).json({
+            success: false,
+            error: 'Invalid email or password'
+          });
 
-      // Successful authentication
-      } else {
-        const payload = {
-          id: user._id 
-        }
-
-        jwt.sign(
-          payload,
-          process.env.JWT_SECRET,
-          { expiresIn: '1h' },
-          (err, token) => {
-            if (err) {
-              res.status(200).json({
-                success: false,
-                error: 'Error during authentication'
-              });
-              next(err);
-            }
-
-            res.status(200).json({
-              success: true,
-              token: "Bearer " + token
-            });
+        // Successful authentication
+        } else {
+          const payload = {
+            id: user._id 
           }
-        );
-      }
-    })(req, res, next);
+
+          // Create JSON web token
+          jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' },
+            (err, token) => {
+              if (err) {
+                res.status(200).json({
+                  success: false,
+                  error: 'Error during authentication'
+                });
+                next(err);
+              }
+
+              /**
+              res.status(200).json({
+                success: true,
+                token: "Bearer " + token
+              });
+              **/
+              
+              const cookieOptions = {
+                httpOnly: true,
+                sameSite: true,
+                secure: true, 
+                maxAge: 1000 * 60 * 60 // 1 hour
+              }
+
+              // Set cookie in response header
+              res
+                .status(200)
+                .cookie('token', token, cookieOptions)
+                .json({ success: true });
+            }
+          );
+        }
+      })(req, res, next);
+    }
   }
 ];
