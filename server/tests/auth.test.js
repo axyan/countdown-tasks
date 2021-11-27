@@ -106,7 +106,7 @@ describe('POST /login Test Suite', () => {
 
   afterAll(async () => await mongoTestServer.terminate());
 
-  test('successful login should return a token', async () => {
+  test('successful login should return a JSON web token cookie', async () => {
     const res = await request(app)
       .post('/login')
       .set('Accept', 'application/json')
@@ -117,6 +117,82 @@ describe('POST /login Test Suite', () => {
       .expect(200);
 
     expect(res.body.success).toBeTruthy();
-    expect(res.body.token).toBeDefined();
+    expect(res.header['set-cookie']).toBeDefined();
+  });
+
+  test('email does not exist should return generic error', async () => {
+    const res = await request(app)
+      .post('/login')
+      .set('Accept', 'application/json')
+      .send({
+        email: 'picklerick2104982034@c137.com',
+        password: 'vindicators'
+      })
+      .expect(200);
+
+    expect(res.body.success).toBeFalsy();
+    expect(res.body.error).toMatch('Invalid email or password');
+    expect(res.header['set-cookie']).toBeUndefined();
+  });
+
+  test('invalid email format should return error', async () => {
+    const res = await request(app)
+      .post('/login')
+      .set('Accept', 'application/json')
+      .send({
+        email: 'picklerickatc137.com',
+        password: 'vindicators'
+      })
+      .expect(200);
+
+    expect(res.body.success).toBeFalsy();
+    expect(res.body.error).toMatch('Invalid email format');
+    expect(res.header['set-cookie']).toBeUndefined();
+  });
+
+
+  test('empty email should return error', async () => {
+    const res = await request(app)
+      .post('/login')
+      .set('Accept', 'application/json')
+      .send({
+        email: '',
+        password: 'vindicators'
+      })
+      .expect(200);
+
+    expect(res.body.success).toBeFalsy();
+    expect(res.body.error).toMatch('Email is required');
+    expect(res.header['set-cookie']).toBeUndefined();
+  });
+
+  test('incorrect password should return generic error', async () => {
+    const res = await request(app)
+      .post('/login')
+      .set('Accept', 'application/json')
+      .send({
+        email: 'picklerick@c137.com',
+        password: 'password'
+      })
+      .expect(200);
+
+    expect(res.body.success).toBeFalsy();
+    expect(res.body.error).toMatch('Invalid email or password');
+    expect(res.header['set-cookie']).toBeUndefined();
+  });
+
+  test('empty password should return error', async () => {
+    const res = await request(app)
+      .post('/login')
+      .set('Accept', 'application/json')
+      .send({
+        email: 'picklerick@c137.com',
+        password: ''
+      })
+      .expect(200);
+
+    expect(res.body.success).toBeFalsy();
+    expect(res.body.error).toMatch('Password is required');
+    expect(res.header['set-cookie']).toBeUndefined();
   });
 });
