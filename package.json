@@ -1,0 +1,23 @@
+{
+  "name": "countdown-tasks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm start\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axyan/countdown-tasks.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/axyan/countdown-tasks/issues"
+  },
+  "homepage": "https://github.com/axyan/countdown-tasks#readme",
+  "devDependencies": {
+    "concurrently": "^6.4.0"
+  }
+}
