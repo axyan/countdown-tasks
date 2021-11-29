@@ -6,8 +6,8 @@ const app = require('./app.js');
 const mongoTestServer = require('./mongoTestServer');
 const User = require('../models/user');
 
-/** Test POST for '/signup' **/
-describe('POST /signup Test Suite', () => {
+/** Test POST for '/api/users' **/
+describe('POST /api/users Test Suite', () => {
 
   beforeAll(async () => await mongoTestServer.initialize());
 
@@ -15,7 +15,7 @@ describe('POST /signup Test Suite', () => {
 
   test('register new user successfully', async () => {
     const res = await request(app)
-      .post('/signup')
+      .post('/api/users')
       .set('Accept', 'application/json')
       .send({
         email: 'darthvader@deathstar.stormtrooper',
@@ -27,7 +27,7 @@ describe('POST /signup Test Suite', () => {
 
   test('invalid email format should respond with an error', async () => {
     const res = await request(app)
-      .post('/signup')
+      .post('/api/users')
       .set('Accept', 'application/json')
       .send({
         email: 'darthvader.email@',
@@ -42,7 +42,7 @@ describe('POST /signup Test Suite', () => {
 
   test('email already exists should not respond with an error to end user', async () => {
     const res = await request(app)
-      .post('/signup')
+      .post('/api/users')
       .set('Accept', 'application/json')
       .send({
         email: 'darthvader@deathstar.stormtrooper',
@@ -54,7 +54,7 @@ describe('POST /signup Test Suite', () => {
 
   test('password length less than 8 should respond with an error', async () => {
     const res = await request(app)
-      .post('/signup')
+      .post('/api/users')
       .set('Accept', 'application/json')
       .send({
         email: 'luke@deathstar.stormtrooper',
@@ -69,7 +69,7 @@ describe('POST /signup Test Suite', () => {
 
   test('different password and confirm password should respond with an error', async () => {
     const res = await request(app)
-      .post('/signup')
+      .post('/api/users')
       .set('Accept', 'application/json')
       .send({
         email: 'c3po@deathstar.stormtrooper',
@@ -83,8 +83,8 @@ describe('POST /signup Test Suite', () => {
   });
 });
 
-/** Test POST for '/login' **/
-describe('POST /login Test Suite', () => {
+/** Test POST for '/api/session' **/
+describe('POST /api/session Test Suite', () => {
 
   beforeAll(async () => {
     await mongoTestServer.initialize();
@@ -106,9 +106,9 @@ describe('POST /login Test Suite', () => {
 
   afterAll(async () => await mongoTestServer.terminate());
 
-  test('successful login should return a JSON web token cookie', async () => {
+  test('successful session should return a JSON web token cookie', async () => {
     const res = await request(app)
-      .post('/login')
+      .post('/api/session')
       .set('Accept', 'application/json')
       .send({
         email: 'picklerick@c137.com',
@@ -122,7 +122,7 @@ describe('POST /login Test Suite', () => {
 
   test('email does not exist should return generic error', async () => {
     const res = await request(app)
-      .post('/login')
+      .post('/api/session')
       .set('Accept', 'application/json')
       .send({
         email: 'picklerick2104982034@c137.com',
@@ -137,7 +137,7 @@ describe('POST /login Test Suite', () => {
 
   test('invalid email format should return error', async () => {
     const res = await request(app)
-      .post('/login')
+      .post('/api/session')
       .set('Accept', 'application/json')
       .send({
         email: 'picklerickatc137.com',
@@ -153,7 +153,7 @@ describe('POST /login Test Suite', () => {
 
   test('empty email should return error', async () => {
     const res = await request(app)
-      .post('/login')
+      .post('/api/session')
       .set('Accept', 'application/json')
       .send({
         email: '',
@@ -168,7 +168,7 @@ describe('POST /login Test Suite', () => {
 
   test('incorrect password should return generic error', async () => {
     const res = await request(app)
-      .post('/login')
+      .post('/api/session')
       .set('Accept', 'application/json')
       .send({
         email: 'picklerick@c137.com',
@@ -183,7 +183,7 @@ describe('POST /login Test Suite', () => {
 
   test('empty password should return error', async () => {
     const res = await request(app)
-      .post('/login')
+      .post('/api/session')
       .set('Accept', 'application/json')
       .send({
         email: 'picklerick@c137.com',

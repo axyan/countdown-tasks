@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "devstart": "DEBUG=server:* nodemon -r dotenv/config ./bin/www dotenv_config_path=./.env.development",
+    "dev": "DEBUG=server:* nodemon -r dotenv/config ./bin/www dotenv_config_path=./.env.development",
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
@@ -34,5 +34,10 @@
     "coveragePathIgnorePatterns": [
       "/node_modules"
     ]
+  },
+  "config": {
+    "mongodbMemoryServer": {
+      "downloadUrl": "https://fastdl.mongodb.org/linux/mongodb-linux-aarch64-rhel82-5.0.4.tgz"
+    }
   }
 }
