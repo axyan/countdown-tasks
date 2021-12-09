@@ -6,13 +6,13 @@ const userRouter = require('./user');
 const taskRouter = require('./task');
 
 /**
- * API ROUTER
+ * API ROUTES
  *
  * URL: /api
  */
 
 apiRouter.use(authRouter);
 apiRouter.use(userRouter);
-apiRouter.use('/users/:id', taskRouter);
+apiRouter.use('/users/:userId', taskRouter);
 
 module.exports = apiRouter;

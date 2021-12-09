@@ -15,6 +15,7 @@ const userSchema = new Schema({
     }
   },
   password: { type: String, required: true, maxLength: 100 },
+  tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }]
 });
 
 // User instance method to compare passwords

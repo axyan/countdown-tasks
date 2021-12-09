@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const taskSchema = new Schema (
   {
     name: { type: String, required: true, maxLength: 100 },
-    endDatetime: { type: Date, required: true }
+    due: { type: Number, required: true }
   },
   { timestamps: true }
 );

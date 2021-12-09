@@ -2,6 +2,18 @@ const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 
+const Blacklist = require('../models/blacklist');
+
+/**
+ * Handle GET for '/api/session/user'
+ * Returns user id when provided with valid JWT
+ *
+ * @response: User ID
+ */
+exports.returnUser = (req, res, next) => {
+  res.status(200).json({ success: true, id: req.user.id });
+};
+
 /**
  * Handle POST for '/api/session'
  * Authenticates user and 'creates' a new session
@@ -63,7 +75,7 @@ exports.createSession = [
           jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            { expiresIn: '1h' },
+            { expiresIn: process.env.JWT_EXPIRES_IN },
             (err, token) => {
               if (err) {
                 res.status(200).json({
@@ -73,18 +85,11 @@ exports.createSession = [
                 next(err);
               }
 
-              /**
-              res.status(200).json({
-                success: true,
-                token: "Bearer " + token
-              });
-              **/
-              
               const cookieOptions = {
                 httpOnly: true,
                 sameSite: true,
                 secure: true, 
-                maxAge: 1000 * 60 * 60 // 1 hour
+                maxAge: process.env.COOKIE_MAX_AGE
               }
 
               // Set cookie in response header
@@ -102,10 +107,23 @@ exports.createSession = [
 
 /**
  * Handle DELETE for '/api/session'
- * Deletes session by adding JWT of user to blacklist
+ * Deletes session by adding JWT of user to a blacklist
  *
  * @response: None
  */
 exports.deleteSession = (req, res, next) => {
-  res.send('NOT IMPLEMENTED: Session DELETE');
+  const blacklistToken = new Blacklist({
+    _id: req.cookies.token,
+    expiration: req.token.exp
+  });
+
+  blacklistToken.save(err => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ success: false, error: 'Error deleting session' });
+    } else {
+      return res.status(200).json({ success: true });
+    }
+  });
 };
