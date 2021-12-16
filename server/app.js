@@ -1,17 +1,27 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 const createError = require('http-errors');
 const logger = require('morgan');
 
-const passport = require('passport');
-
-const db = require('./config/database');
 const apiRouter = require('./routes/api');
+
+// Cache setup
+const { redisClient } = require('./config/cache');
+
+// Database setup
+require('./config/database');
+
+// Passport setup
+require('./config/passport');
 
 const app = express();
 
-// Passport setup
-require('./config/passport')
+app.use(cors({ 
+  origin: process.env.CLIENT_ORIGIN_URL,
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(logger('dev'));
 app.use(express.json());

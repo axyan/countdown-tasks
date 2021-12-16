@@ -7,7 +7,7 @@ const auth = require('../middlewares/authenticate');
 /**
  * SESSION ROUTES
  *
- * URL: /api/session
+ * URL: /api/session/user
  */
 
 // GET request to validate session token and return user info

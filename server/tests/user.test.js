@@ -20,7 +20,7 @@ describe('POST /api/users Test Suite', () => {
       .send({
         email: 'darthvader@deathstar.stormtrooper',
         password: 'executeorder66',
-        passwordConfirmation: 'executeorder66'
+        confirmPassword: 'executeorder66'
       })
       .expect(200);
 
@@ -34,7 +34,7 @@ describe('POST /api/users Test Suite', () => {
       .send({
         email: 'darthvader.email@',
         password: 'smartpassword',
-        passwordConfirmation: 'smartpassword'
+        confirmPassword: 'smartpassword'
       })
       .expect(400);
 
@@ -49,7 +49,7 @@ describe('POST /api/users Test Suite', () => {
       .send({
         email: 'darthvader@deathstar.stormtrooper',
         password: 'newpassword',
-        passwordConfirmation: 'newpassword'
+        confirmPassword: 'newpassword'
       })
       .expect(200);
 
@@ -63,7 +63,7 @@ describe('POST /api/users Test Suite', () => {
       .send({
         email: 'luke@deathstar.stormtrooper',
         password: 'pass',
-        passwordConfirmation: 'pass'
+        confirmPassword: 'pass'
       })
       .expect(400);
 
@@ -71,14 +71,14 @@ describe('POST /api/users Test Suite', () => {
     expect(res.body.error).toMatch('Password needs to be between 8 and 64 characters');
   });
 
-  test('should respond with an error if password and password confirmation are different', async () => {
+  test('should respond with an error if password and confirm password are different', async () => {
     const res = await request(app)
       .post('/api/users')
       .set('Accept', 'application/json')
       .send({
         email: 'c3po@deathstar.stormtrooper',
         password: 'birdperson1',
-        passwordConfirmation: 'birdperson2'
+        confirmPassword: 'birdperson2'
       })
       .expect(400);
 
@@ -127,7 +127,7 @@ describe('PUT /api/users/:userId Test Suite', () => {
     await request(app)
       .put(`/api/users/${UPDATE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${UPDATE_USER.token}`])
+      .set('Authorization', `Bearer ${UPDATE_USER.token}`)
       .send({
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password
@@ -145,11 +145,11 @@ describe('PUT /api/users/:userId Test Suite', () => {
     await request(app)
       .put(`/api/users/${UPDATE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${UPDATE_USER.token}`])
+      .set('Authorization', `Bearer ${UPDATE_USER.token}`)
       .send({
         oldPassword: CURR_CRED.password,
         newPassword: NEW_CRED.newPassword,
-        newPasswordConfirmation: NEW_CRED.newPassword
+        newConfirmPassword: NEW_CRED.newPassword
       })
       .expect(200);
 
@@ -164,12 +164,12 @@ describe('PUT /api/users/:userId Test Suite', () => {
     await request(app)
       .put(`/api/users/${UPDATE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${UPDATE_USER.token}`])
+      .set('Authorization', `Bearer ${UPDATE_USER.token}`)
       .send({
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password,
         newPassword: NEW_CRED.newPassword,
-        newPasswordConfirmation: NEW_CRED.newPassword
+        newConfirmPassword: NEW_CRED.newPassword
       })
       .expect(200);
 
@@ -184,7 +184,7 @@ describe('PUT /api/users/:userId Test Suite', () => {
     const res = await request(app)
       .put(`/api/users/${UPDATE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${UPDATE_USER.token}`])
+      .set('Authorization', `Bearer ${UPDATE_USER.token}`)
       .send({
         email: 'temp@u',
         oldPassword: CURR_CRED.password
@@ -201,11 +201,11 @@ describe('PUT /api/users/:userId Test Suite', () => {
     const res = await request(app)
       .put(`/api/users/${UPDATE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${UPDATE_USER.token}`])
+      .set('Authorization', `Bearer ${UPDATE_USER.token}`)
       .send({
         email: NEW_CRED.email,
         newPassword: NEW_CRED.newPassword,
-        newPasswordConfirmation: NEW_CRED.newPassword
+        newConfirmPassword: NEW_CRED.newPassword
       })
       .expect(400);
 
@@ -222,24 +222,24 @@ describe('PUT /api/users/:userId Test Suite', () => {
     const res1 = await request(app)
       .put(`/api/users/${UPDATE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${UPDATE_USER.token}`])
+      .set('Authorization', `Bearer ${UPDATE_USER.token}`)
       .send({
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password,
         newPassword: 'a'.repeat(7),
-        newPasswordConfirmation: 'a'.repeat(7)
+        newConfirmPassword: 'a'.repeat(7)
       })
       .expect(400);
 
     const res2 = await request(app)
       .put(`/api/users/${UPDATE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${UPDATE_USER.token}`])
+      .set('Authorization', `Bearer ${UPDATE_USER.token}`)
       .send({
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password,
         newPassword: 'a'.repeat(65),
-        newPasswordConfirmation: 'a'.repeat(65)
+        newConfirmPassword: 'a'.repeat(65)
       })
       .expect(400);
 
@@ -252,16 +252,16 @@ describe('PUT /api/users/:userId Test Suite', () => {
     expect(isMatch).toBeFalsy();
   });
 
-  test('should return an error if new password and confirmation password differ', async () => {
+  test('should return an error if new password and confirm password differ', async () => {
     const res = await request(app)
       .put(`/api/users/${UPDATE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${UPDATE_USER.token}`])
+      .set('Authorization', `Bearer ${UPDATE_USER.token}`)
       .send({
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password,
         newPassword: NEW_CRED.newPassword,
-        newPasswordConfirmation: NEW_CRED.newPassword + 'abc'
+        newConfirmPassword: NEW_CRED.newPassword + 'abc'
       })
       .expect(400);
 
@@ -277,12 +277,12 @@ describe('PUT /api/users/:userId Test Suite', () => {
     const res = await request(app)
       .put(`/api/users/${UPDATE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${UPDATE_USER.token}`])
+      .set('Authorization', `Bearer ${UPDATE_USER.token}`)
       .send({
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password,
         newPassword: CURR_CRED.password,
-        newPasswordConfirmation: CURR_CRED.password
+        newConfirmPassword: CURR_CRED.password
       })
       .expect(400);
 
@@ -326,7 +326,7 @@ describe('DELETE /api/users/:userId Test Suite', () => {
     await request(app)
       .delete(`/api/users/${DELETE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${DELETE_USER.token}`])
+      .set('Authorization', `Bearer ${DELETE_USER.token}`)
       .send()
       .expect(204);
 
@@ -340,7 +340,7 @@ describe('DELETE /api/users/:userId Test Suite', () => {
     await request(app)
       .post(`/api/users/${DELETE_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${DELETE_USER.token}`])
+      .set('Authorization', `Bearer ${DELETE_USER.token}`)
       .send({
         name: 'Task #1',
         due: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
@@ -350,7 +350,7 @@ describe('DELETE /api/users/:userId Test Suite', () => {
     await request(app)
       .post(`/api/users/${DELETE_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${DELETE_USER.token}`])
+      .set('Authorization', `Bearer ${DELETE_USER.token}`)
       .send({
         name: 'Task #2',
         due: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
@@ -360,7 +360,7 @@ describe('DELETE /api/users/:userId Test Suite', () => {
     await request(app)
       .delete(`/api/users/${DELETE_USER.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${DELETE_USER.token}`])
+      .set('Authorization', `Bearer ${DELETE_USER.token}`)
       .send()
       .expect(204);
 

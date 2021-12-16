@@ -26,6 +26,7 @@ exports.createTask = [
   body('name')
     .trim()
     .not().isEmpty().withMessage('Task name is required').bail()
+    .isLength({ max: 100 }).withMessage('Task name cannot be longer than 100 characters').bail()
     .escape(),
   body('due')
     .trim()
@@ -61,13 +62,7 @@ exports.createTask = [
             user.save((err) => {
               if (err) { return next(err); }
 
-              const payload = {
-                id: task._id,
-                name: task.name,
-                due: task.due
-              };
-
-              res.status(201).json({ task: payload });
+              res.status(201).json({ task: task.toJSON() });
             });
           });
         });
@@ -84,6 +79,7 @@ exports.updateTask = [
   body('name')
     .trim()
     .optional({ checkFalsy: true })
+    .isLength({ max: 100 }).withMessage('Task name cannot be longer than 100 characters').bail()
     .escape(),
   body('due')
     .trim()
@@ -123,13 +119,7 @@ exports.updateTask = [
                 task.save((err) => {
                   if (err) { return next(err); }
 
-                  const payload = {
-                    _id: task._id,
-                    name: task.name,
-                    due: task.due
-                  };
-
-                  res.status(200).json({ task: payload });
+                  res.status(200).json({ task: task.toJSON() });
                 });
               });
           } else {

@@ -7,7 +7,13 @@ mongoose.connect(
     useUnifiedTopology: true
   }
 );
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error: '));
 
-module.exports = db;
+mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error: '));
+
+mongoose.set('toJSON', {
+  transform: (doc, ret, options) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+    delete ret.__v;
+  }
+});

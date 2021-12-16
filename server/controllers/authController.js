@@ -1,6 +1,7 @@
 const { body, validationResult } = require('express-validator');
-const passport = require('passport');
+const CryptoJS = require('crypto-js');
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
 
 const Blacklist = require('../models/blacklist');
 
@@ -45,7 +46,6 @@ exports.createSession = [
         error: validationError.msg
       });
     
-    // No validation errors
     } else {
       // Authenticate user provided email and password
       passport.authenticate('local', { session: false }, (err, user, info) => {
@@ -68,7 +68,7 @@ exports.createSession = [
         // Successful authentication
         } else {
           const payload = {
-            id: user._id 
+            id: user.id
           }
 
           // Create JSON web token
@@ -85,18 +85,12 @@ exports.createSession = [
                 next(err);
               }
 
-              const cookieOptions = {
-                httpOnly: true,
-                sameSite: true,
-                secure: true, 
-                maxAge: process.env.COOKIE_MAX_AGE
-              }
+              // Hacky solution to prevent XSS by encrypting JWT token string
+              // so that string will need to be decrypted client-side before
+              // being sent in authorization header
+              const encryptedJWT = CryptoJS.AES.encrypt(token, process.env.CRYPTOJS_SECRET).toString();
 
-              // Set cookie in response header
-              res
-                .status(200)
-                .cookie('token', token, cookieOptions)
-                .json({ success: true });
+              res.status(200).json({ success: true, id: user.id, token: encryptedJWT });
             }
           );
         }
@@ -113,8 +107,8 @@ exports.createSession = [
  */
 exports.deleteSession = (req, res, next) => {
   const blacklistToken = new Blacklist({
-    _id: req.cookies.token,
-    expiration: req.token.exp
+    _id: req.user.token,
+    expireAt: req.tokenPayload.exp * 1000 // 
   });
 
   blacklistToken.save(err => {
@@ -123,7 +117,7 @@ exports.deleteSession = (req, res, next) => {
         .status(500)
         .json({ success: false, error: 'Error deleting session' });
     } else {
-      return res.status(200).json({ success: true });
+      return res.sendStatus(204);
     }
   });
 };

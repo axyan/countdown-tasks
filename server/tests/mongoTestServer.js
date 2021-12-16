@@ -10,6 +10,14 @@ exports.initialize = async () => {
 
   await mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
   mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error: '));
+
+  mongoose.set('toJSON', {
+    transform: (doc, ret, options) => {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+    }
+  });
 };
 
 // Shutdown and clean up MongoDB instance in memory

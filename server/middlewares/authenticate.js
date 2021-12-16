@@ -3,8 +3,13 @@ const jwt = require('jsonwebtoken');
 const Blacklist = require('../models/blacklist');
 
 exports.verifyToken = (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token) {
+  const authHeader = req.headers.authorization;
+
+  let token;
+
+  if (authHeader !== undefined && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7, authHeader.length);
+  } else {
     return res
       .status(401)
       .json({ success: false , error: 'Token not provided' });
@@ -19,16 +24,16 @@ exports.verifyToken = (req, res, next) => {
 
     Blacklist.exists({ _id: token }, (err, isMatch) => {
       if (err) {
-        res
+        return res
           .status(500)
           .json({ success: false, error: 'Error verifying token' });
       } else if (isMatch) {
-        res
+        return res
           .status(401)
           .json({ success: false, error: 'Token is invalid' });
       } else {
-        req.user = { id: payload.id };
-        req.token = { ...payload };
+        req.user = { id: payload.id, token: token };
+        req.tokenPayload = { ...payload };
         next();
       }
     });

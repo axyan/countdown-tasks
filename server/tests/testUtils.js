@@ -1,58 +1,12 @@
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
+const CryptoJS = require('crypto-js');
 
 const User = require('../models/user');
 const Task = require('../models/task');
 
-exports.createUser = async (email, password) => {
-  try {
-    const user = new User({
-      email: email,
-      password: await bcrypt.hash(password, 10)
-    });
-
-    const savedUser = await user.save();
-    return savedUser;
-  } catch (e) {
-    throw e;
-  }
-};
-
-exports.registerUser = async (app, email, password) => {
-  return await request(app)
-    .post('/api/users')
-    .set('Accept', 'application/json')
-    .send({
-      email: email,
-      password: password,
-      confirmPassword: password
-    });
-};
-
-exports.loginUser = async (app, email, password) => {
-  return await request(app)
-    .post('/api/session')
-    .set('Accept', 'application/json')
-    .send({ email, password });
-};
-
-exports.getJWTFromResponse = (response) => {
-  return response.header['set-cookie'][0].split(';', 1)[0].split('=')[1];
-};
-
 exports.decodeJWT = (token) => {
   return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-};
-
-exports.getUserJWT = async (app, email, password) => {
-  const res = await request(app)
-    .post('/api/session')
-    .set('Accept', 'application/json')
-    .send({ email, password });
-
-  const token = res.header['set-cookie'][0].split(';', 1)[0].split('=')[1];
-
-  return token;
 };
 
 exports.createUserWithJWT = async (app, email, password) => {
@@ -68,9 +22,24 @@ exports.createUserWithJWT = async (app, email, password) => {
       .set('Accept', 'application/json')
       .send({ email, password });
 
-    const token = res.header['set-cookie'][0].split(';', 1)[0].split('=')[1];
+    const bytes = CryptoJS.AES.decrypt(res.body.token, process.env.CRYPTOJS_SECRET);
+    const token = bytes.toString(CryptoJS.enc.Utf8);
 
     return { id: savedUser._id.toString(), email, password, token };
+  } catch (e) {
+    throw e;
+  }
+};
+
+exports.createUser = async (email, password) => {
+  try {
+    const user = new User({
+      email: email,
+      password: await bcrypt.hash(password, 10)
+    });
+    const savedUser = await user.save();
+
+    return { id: savedUser._id.toString(), email, password };
   } catch (e) {
     throw e;
   }

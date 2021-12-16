@@ -50,7 +50,7 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${POST_USER.token}`])
+      .set('Authorization', `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
         due: NEW_TASK_1.due
@@ -66,7 +66,7 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     const res1 = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${POST_USER.token}`])
+      .set('Authorization', `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
         due: NEW_TASK_1.due
@@ -80,7 +80,7 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     const res2 = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${POST_USER.token}`])
+      .set('Authorization', `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_2.name,
         due: NEW_TASK_2.due
@@ -96,7 +96,7 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${POST_USER.token}`])
+      .set('Authorization', `Bearer ${POST_USER.token}`)
       .send({
         name: '',
         due: NEW_TASK_1.due
@@ -111,7 +111,7 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${POST_USER.token}`])
+      .set('Authorization', `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
         due: ''
@@ -126,7 +126,7 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${POST_USER.token}`])
+      .set('Authorization', `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
         due: '34l5j34k'
@@ -141,7 +141,7 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${POST_USER.token}`])
+      .set('Authorization', `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
         due: -1
@@ -156,7 +156,7 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${POST_USER.token}`])
+      .set('Authorization', `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
         due: Math.floor(Date.now() / 1000) - (24 * 60 * 60)
@@ -208,7 +208,7 @@ describe('GET /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .get(`/api/users/${GET_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${GET_USER.token}`])
+      .set('Authorization', `Bearer ${GET_USER.token}`)
       .send()
       .expect(200);
 
@@ -219,7 +219,7 @@ describe('GET /api/users/:userId/tasks Test Suite', () => {
     await request(app)
       .post(`/api/users/${GET_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${GET_USER.token}`])
+      .set('Authorization', `Bearer ${GET_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
         due: NEW_TASK_1.due
@@ -229,7 +229,7 @@ describe('GET /api/users/:userId/tasks Test Suite', () => {
     await request(app)
       .post(`/api/users/${GET_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${GET_USER.token}`])
+      .set('Authorization', `Bearer ${GET_USER.token}`)
       .send({
         name: NEW_TASK_2.name,
         due: NEW_TASK_2.due
@@ -239,7 +239,7 @@ describe('GET /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .get(`/api/users/${GET_USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${GET_USER.token}`])
+      .set('Authorization', `Bearer ${GET_USER.token}`)
       .send()
       .expect(200);
 
@@ -292,7 +292,7 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${USER.token}`])
+      .set('Authorization', `Bearer ${USER.token}`)
       .send({
         name: UPDATE_TASK.newName
       })
@@ -307,7 +307,7 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${USER.token}`])
+      .set('Authorization', `Bearer ${USER.token}`)
       .send({
         due: UPDATE_TASK.newDue
       })
@@ -322,7 +322,7 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${USER.token}`])
+      .set('Authorization', `Bearer ${USER.token}`)
       .send({
         name: UPDATE_TASK.newName,
         due: UPDATE_TASK.newDue
@@ -338,7 +338,7 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${USER.token}`])
+      .set('Authorization', `Bearer ${USER.token}`)
       .send({
         name: UPDATE_TASK.newName,
         due: UPDATE_TASK.newDue.toString() + 'a'
@@ -352,7 +352,7 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${USER.token}`])
+      .set('Authorization', `Bearer ${USER.token}`)
       .send({
         name: UPDATE_TASK.newName,
         due: -1
@@ -366,7 +366,7 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${USER.token}`])
+      .set('Authorization', `Bearer ${USER.token}`)
       .send({
         name: UPDATE_TASK.newName,
         due: CURR_TASK.due - (24 * 60 * 60)
@@ -415,14 +415,14 @@ describe('DELETE /api/users/:userId/tasks Test Suite', () => {
     await request(app)
       .delete(`/api/users/${USER.id}/tasks/${DELETE_TASK.id}`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${USER.token}`])
+      .set('Authorization', `Bearer ${USER.token}`)
       .expect(204);
 
     // Check user has no tasks
     const res = await request(app)
       .get(`/api/users/${USER.id}/tasks`)
       .set('Accept', 'application/json')
-      .set('Cookie', [`token=${USER.token}`])
+      .set('Authorization', `Bearer ${USER.token}`)
       .send()
       .expect(200);
 

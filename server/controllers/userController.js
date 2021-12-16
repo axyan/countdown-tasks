@@ -13,6 +13,7 @@ exports.createUser = [
   body('email', 'Invalid email format')
     .trim()
     .not().isEmpty().withMessage('Email is required').bail()
+    .isLength({ min: 3, max: 100 }).bail()
     .isEmail().bail()
     .normalizeEmail()
     .escape(),
@@ -20,10 +21,10 @@ exports.createUser = [
     .trim()
     .isLength({ min: 8, max: 64 }).bail()
     .escape(),
-  body('passwordConfirmation', 'Passwords do not match')
+  body('confirmPassword', 'Passwords do not match')
     .trim()
     .not().isEmpty().bail()
-    .custom((passwordConfirmation, { req }) => passwordConfirmation === req.body.password).bail()
+    .custom((confirmPassword, { req }) => confirmPassword === req.body.password).bail()
     .escape(),
 
   // Check for validaton errors
@@ -70,7 +71,9 @@ exports.updateUser = [
   // Sanitize and validate inputs
   body('email', 'Invalid email format')
     .trim()
-    .isEmail().optional({ checkFalsy: true }).bail()
+    .optional({ checkFalsy: true })
+    .isLength({ min: 3, max: 100 }).bail()
+    .isEmail().bail()
     .normalizeEmail()
     .escape(),
   body('oldPassword', 'Password needs to be between 8 and 64 characters')
@@ -81,11 +84,11 @@ exports.updateUser = [
     .trim()
     .isLength({ min: 8, max: 64 }).optional({ checkFalsy: true }).bail()
     .escape(),
-  body('newPasswordConfirmation', 'New passwords do not match')
+  body('newConfirmPassword', 'New passwords do not match')
     .trim()
     .isLength({ min: 8, max: 64 }).optional({ checkFalsy: true }).bail()
-    .custom((newPasswordConfirmation, { req }) => newPasswordConfirmation === req.body.newPassword).bail()
-    .custom((newPasswordConfirmation, { req }) => newPasswordConfirmation !== req.body.oldPassword).bail()
+    .custom((newConfirmPassword, { req }) => newConfirmPassword === req.body.newPassword).bail()
+    .custom((newConfirmPassword, { req }) => newConfirmPassword !== req.body.oldPassword).bail()
     .escape(),
 
   // Check for validaton errors
@@ -109,7 +112,7 @@ exports.updateUser = [
 
           // Handle hashing password if new password provided
           if (req.body.newPassword !== undefined 
-              && req.body.newPasswordConfirmation !== undefined) {
+              && req.body.newConfirmPassword !== undefined) {
             try {
               user.password = await bcrypt.hash(req.body.newPassword, 10);
             } catch (e) {
@@ -134,6 +137,8 @@ exports.deleteUser = (req, res, next) => {
   User
     .findById(req.user.id)
     .exec((err, user) => {
+      if (err) { return next(err); }
+
       user.tasks.map((taskId) => {
         Task.findByIdAndDelete(taskId, (err) => {
           if (err) { return next(err); }
