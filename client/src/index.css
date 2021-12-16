@@ -1,0 +1,25 @@
+.btn:focus {
+  box-shadow: none;
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7 !important;
+}
+
+.btn-primary:focus {
+  background-color: #0d6efd;
+}
+
+.btn-secondary:hover {
+  background-color: #5c636a !important;
+}
+
+.btn-secondary:focus {
+  background-color: #6c757d;
+}
+
+@media screen and (max-width: 464px) {
+  nav {
+    padding-bottom: 20px !important;
+  }
+}

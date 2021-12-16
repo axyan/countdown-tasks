@@ -2,18 +2,21 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.css';
+import './index.css';
 
 import App from './App';
-import SignUp from './routes/signup';
-import LogIn from './routes/login';
+import Home from './pages/Home';
+import Register from './pages/Register';
+import Login from './pages/Login';
 
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
-          <Route path="signup" element={<SignUp />} />
-          <Route path="login" element={<LogIn />} />
+          <Route index element={<Home />} />
+          <Route path="signup" element={<Register />} />
+          <Route path="login" element={<Login />} />
         </Route>
       </Routes>
     </BrowserRouter>
