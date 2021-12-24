@@ -19,19 +19,20 @@ const TaskTimer = ({ name, currentEpoch, due, handleEdit, handleDelete }) => {
   }, [timer]);
 
   return (
-    <div className="timer-instance">
-      <span>{name} - </span>
-      {isTargetAchieved || due < Math.round(Date.now() / 1000) ? (
-        <div style={{display: "inline"}}>
-          <span style={{fontWeight: "bold"}}>
-            Completed at {new Date(due*1000).toLocaleString()}
-          </span>
-        </div>
-      ) : (
-        timer.getTimeValues().toString(['days', 'hours', 'minutes', 'seconds'])
-      )}
+    <div className="timer-instance d-flex align-items-center justify-content-between">
+      <div>{name} -&nbsp;
+				{isTargetAchieved || due < Math.round(Date.now() / 1000) ? (
+					<div style={{display: "inline"}}>
+						<span style={{fontWeight: "bold"}}>
+							Completed at {new Date(due*1000).toLocaleString()}
+						</span>
+					</div>
+				) : (
+					timer.getTimeValues().toString(['days', 'hours', 'minutes', 'seconds'])
+				)}
+			</div>
 
-      <div className="float-end">
+      <div>
         {/*
         <button className="btn btn-dark btn-sm me-2" type="button" onClick={handleEdit}>Edit</button>
         */}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../hooks/useAuth';
 import TaskForm from './TaskForm';
@@ -7,6 +8,7 @@ import Task from './Task';
 const Tasks = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
+  const { navigate } = useNavigate();
 
   const DOMAIN_NAME = process.env.REACT_APP_DOMAIN_NAME;
 
@@ -26,20 +28,24 @@ const Tasks = () => {
     };
 
     if (user !== null) {
-      fetchTasks().then((data) => {
-        setTasks(data.tasks.map((task) => {
-          return (
-            <Task
-              userId={user.id}
-              taskId={task.id} 
-              taskName={task.name}
-              taskDue={task.due}
-              updateTasks={setTasks}
-              key={task.id}
-            />
-          );
-        }));
-      });
+      fetchTasks()
+        .then((data) => {
+          const taskList = data.tasks.map((task) => {
+            return (
+              <Task
+                userId={user.id}
+                taskId={task.id}
+                taskName={task.name}
+                taskDue={task.due}
+                updateTasks={setTasks}
+                key={task.id}
+              />
+            );
+          });
+
+          setTasks(taskList);
+        })
+      .catch(err => console.log(err));
     }
   }, [user, DOMAIN_NAME]);
 
@@ -59,6 +65,14 @@ const Tasks = () => {
       );
 
       const response = await res.json();
+      if (!res.ok) {
+        if (res.status === 400) {
+          console.log(response.error);
+          return;
+        } else {
+          navigate('/login');
+        }
+      }
 
       setTasks([
         ...tasks,

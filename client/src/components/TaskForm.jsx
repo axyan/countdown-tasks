@@ -45,6 +45,7 @@ const TaskForm = ({ submitTask }) => {
             id="taskName"
             name="taskName"
             className="form-control"
+            maxLength="100"
             value={taskName}
             onChange={(event) => setTaskName(event.target.value)}
             required
