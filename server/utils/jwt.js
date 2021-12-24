@@ -10,9 +10,9 @@ exports.parseAuthHeader = (requestHeader) => {
   return token;
 };
 
-exports.verifyToken = (token) => {
+exports.verifyToken = (token, secret) => {
   return new Promise((resolve, reject) => {
-    jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
+    jwt.verify(token, secret, (err, payload) => {
       if (err) {
         reject({ httpErrorCode: 401, message: err.message });
         return;

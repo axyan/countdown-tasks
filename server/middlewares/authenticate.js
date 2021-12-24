@@ -13,7 +13,7 @@ exports.verifyToken = async (req, res, next) => {
 
   try {
     // Verify token signature and decode payload
-    const payload = await jwt.verifyToken(token);
+    const payload = await jwt.verifyToken(token, process.env.JWT_SECRET);
 
     // Check if token is blacklisted
     const tokenBlacklisted = await blacklist.exists(token);
