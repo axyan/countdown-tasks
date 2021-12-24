@@ -5,7 +5,12 @@ const app = require('./app.js');
 const mongoTestServer = require('./mongoTestServer');
 const utils = require('./testUtils');
 const User = require('../models/user');
-const Blacklist = require('../models/blacklist');
+
+const redisClient = require('../config/cache');
+afterAll(async () => {
+	await redisClient.flushAll();
+	await redisClient.quit()
+});
 
 /** Test GET for '/api/session/user' **/
 describe('GET /api/session/user Test Suite', () => {
@@ -189,8 +194,8 @@ describe('DELETE /api/session Test Suite', () => {
       .send()
       .expect(204);
 
-    const userBlacklisted = await Blacklist.exists({ _id: DELETE_SESSION_USER.token });
-    expect(userBlacklisted).toBeTruthy();
+    const keyValue = await redisClient.get(DELETE_SESSION_USER.token);
+    expect(keyValue).toMatch('0'); // Store 0 as value to minimize memory consumption
   });
 
   test('requests with JWT of logged out user should return an error', async () => {

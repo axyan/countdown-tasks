@@ -6,6 +6,12 @@ const mongoTestServer = require('./mongoTestServer');
 const utils = require('./testUtils');
 const User = require('../models/user');
 
+const redisClient = require('../config/cache');
+afterAll(async () => {
+	await redisClient.flushAll();
+	await redisClient.quit()
+});
+
 /** Test POST for '/api/users' **/
 describe('POST /api/users Test Suite', () => {
 

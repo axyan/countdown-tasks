@@ -3,7 +3,7 @@ const CryptoJS = require('crypto-js');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 
-const Blacklist = require('../models/blacklist');
+const blacklist = require('../utils/blacklist');
 
 /**
  * Handle GET for '/api/session/user'
@@ -87,7 +87,7 @@ exports.createSession = [
 
               // Hacky solution to prevent XSS by encrypting JWT token string
               // so that string will need to be decrypted client-side before
-              // being sent in authorization header
+              // being sent in authorization header back to server
               const encryptedJWT = CryptoJS.AES.encrypt(token, process.env.CRYPTOJS_SECRET).toString();
 
               res.status(200).json({ success: true, id: user.id, token: encryptedJWT });
@@ -105,19 +105,13 @@ exports.createSession = [
  *
  * @response: None
  */
-exports.deleteSession = (req, res, next) => {
-  const blacklistToken = new Blacklist({
-    _id: req.user.token,
-    expireAt: req.tokenPayload.exp * 1000 // 
-  });
-
-  blacklistToken.save(err => {
-    if (err) {
-      return res
-        .status(500)
-        .json({ success: false, error: 'Error deleting session' });
-    } else {
-      return res.sendStatus(204);
-    }
-  });
+exports.deleteSession = async (req, res, next) => {
+  try {
+    await blacklist.add(req.user.token, req.tokenPayload.exp);
+    return res.sendStatus(204);
+  } catch (e) {
+    return res
+      .status(500)
+      .json({ success: false, error: 'Error deleting session' });
+  }
 };

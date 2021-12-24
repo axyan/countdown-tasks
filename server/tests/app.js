@@ -1,7 +1,5 @@
 const express = require('express');
-const cookieParser = require('cookie-parser');
 const createError = require('http-errors');
-
 const passport = require('passport');
 
 const apiRouter = require('../routes/api');
@@ -13,12 +11,14 @@ require('dotenv').config({
   path: './.env.test'
 });
 
+const redisClient = require('../config/cache');
+redisClient.connect();
+
 // Passport setup
 require('../config/passport')
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 
 app.use('/api', apiRouter);
 

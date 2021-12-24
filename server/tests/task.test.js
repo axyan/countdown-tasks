@@ -7,6 +7,12 @@ const Task = require('../models/task');
 const User = require('../models/user');
 const utils = require('./testUtils');
 
+const redisClient = require('../config/cache');
+afterAll(async () => {
+	await redisClient.flushAll();
+	await redisClient.quit()
+});
+
 /** Test POST for '/api/users/:userId/tasks' **/
 describe('POST /api/users/:userId/tasks Test Suite', () => {
 
