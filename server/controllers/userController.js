@@ -99,19 +99,19 @@ exports.updateUser = [
     .optional({ checkFalsy: true })
     .bail()
     .escape(),
-  body("newConfirmPassword", "New passwords do not match")
+  body("confirmNewPassword", "New passwords do not match")
     .trim()
     .isLength({ min: 8, max: 64 })
     .optional({ checkFalsy: true })
     .bail()
     .custom(
-      (newConfirmPassword, { req }) =>
-        newConfirmPassword === req.body.newPassword
+      (confirmNewPassword, { req }) =>
+        confirmNewPassword === req.body.newPassword
     )
     .bail()
     .custom(
-      (newConfirmPassword, { req }) =>
-        newConfirmPassword !== req.body.oldPassword
+      (confirmNewPassword, { req }) =>
+        confirmNewPassword !== req.body.oldPassword
     )
     .bail()
     .escape(),
@@ -122,7 +122,6 @@ exports.updateUser = [
 
     if (!errors.isEmpty()) {
       const validationError = errors.array()[0];
-
       res.status(400).json({ success: false, error: validationError.msg });
     } else {
       User.findById(req.user.id).exec(async (err, user) => {
@@ -130,14 +129,27 @@ exports.updateUser = [
           return next(err);
         }
 
-        if (req.body.email !== undefined) {
+        try {
+          isMatch = await user.verifyPassword(req.body.oldPassword);
+          if (!isMatch) {
+            return res
+              .status(400)
+              .json({ success: false, error: "Incorrect password" });
+          }
+        } catch (e) {
+          return next(e);
+        }
+
+        if (req.body.email !== undefined && req.body.email !== user.email) {
           user.email = req.body.email;
         }
 
         // Handle hashing password if new password provided
         if (
           req.body.newPassword !== undefined &&
-          req.body.newConfirmPassword !== undefined
+          req.body.newPassword !== "" &&
+          req.body.confirmNewPassword !== undefined &&
+          req.body.confirmNewPassword !== ""
         ) {
           try {
             user.password = await bcrypt.hash(req.body.newPassword, 10);

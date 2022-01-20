@@ -20,13 +20,18 @@ const userSchema = new Schema({
 });
 
 // User instance method to compare passwords
-userSchema.method("verifyPassword", function (passwordInput, cb) {
-  bcrypt.compare(passwordInput, this.password, (err, isMatch) => {
-    if (err) {
-      return cb(err);
-    }
-    cb(null, isMatch);
-  });
-});
+userSchema.method(
+  "verifyPassword",
+  function (passwordInput, password = this.password) {
+    return new Promise(function (resolve, reject) {
+      bcrypt.compare(passwordInput, password, (err, isMatch) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(isMatch);
+      });
+    });
+  }
+);
 
 module.exports = mongoose.model("User", userSchema);

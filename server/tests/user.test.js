@@ -162,7 +162,7 @@ describe("PUT /api/users/:userId Test Suite", () => {
       .send({
         oldPassword: CURR_CRED.password,
         newPassword: NEW_CRED.newPassword,
-        newConfirmPassword: NEW_CRED.newPassword,
+        confirmNewPassword: NEW_CRED.newPassword,
       })
       .expect(200);
 
@@ -185,7 +185,7 @@ describe("PUT /api/users/:userId Test Suite", () => {
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password,
         newPassword: NEW_CRED.newPassword,
-        newConfirmPassword: NEW_CRED.newPassword,
+        confirmNewPassword: NEW_CRED.newPassword,
       })
       .expect(200);
 
@@ -224,7 +224,7 @@ describe("PUT /api/users/:userId Test Suite", () => {
       .send({
         email: NEW_CRED.email,
         newPassword: NEW_CRED.newPassword,
-        newConfirmPassword: NEW_CRED.newPassword,
+        confirmNewPassword: NEW_CRED.newPassword,
       })
       .expect(400);
 
@@ -249,7 +249,7 @@ describe("PUT /api/users/:userId Test Suite", () => {
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password,
         newPassword: "a".repeat(7),
-        newConfirmPassword: "a".repeat(7),
+        confirmNewPassword: "a".repeat(7),
       })
       .expect(400);
 
@@ -261,7 +261,7 @@ describe("PUT /api/users/:userId Test Suite", () => {
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password,
         newPassword: "a".repeat(65),
-        newConfirmPassword: "a".repeat(65),
+        confirmNewPassword: "a".repeat(65),
       })
       .expect(400);
 
@@ -286,7 +286,7 @@ describe("PUT /api/users/:userId Test Suite", () => {
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password,
         newPassword: NEW_CRED.newPassword,
-        newConfirmPassword: NEW_CRED.newPassword + "abc",
+        confirmNewPassword: NEW_CRED.newPassword + "abc",
       })
       .expect(400);
 
@@ -310,7 +310,7 @@ describe("PUT /api/users/:userId Test Suite", () => {
         email: NEW_CRED.email,
         oldPassword: CURR_CRED.password,
         newPassword: CURR_CRED.password,
-        newConfirmPassword: CURR_CRED.password,
+        confirmNewPassword: CURR_CRED.password,
       })
       .expect(400);
 

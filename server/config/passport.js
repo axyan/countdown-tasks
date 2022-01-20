@@ -12,7 +12,7 @@ passport.use(
       passwordField: "password",
     },
     (email, password, done) => {
-      User.findOne({ email }, (err, user) => {
+      User.findOne({ email }, async (err, user) => {
         if (err) {
           return done(err);
         }
@@ -23,12 +23,12 @@ passport.use(
         }
 
         // Verify password match
-        user.verifyPassword(password, (err, isMatch) => {
-          if (err) {
-            return done(err);
-          }
+        try {
+          isMatch = await user.verifyPassword(password);
           return isMatch ? done(null, user) : done(null, false);
-        });
+        } catch (e) {
+          return done(e);
+        }
       });
     }
   )
