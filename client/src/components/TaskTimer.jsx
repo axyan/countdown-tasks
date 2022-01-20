@@ -1,13 +1,16 @@
 import { useEffect } from 'react';
 import useTimer from 'easytimer-react-hook';
 
+import { secondsToTimeUnits } from '../utils/utils';
+
 const TaskTimer = ({ name, currentEpoch, due, handleEdit, handleDelete }) => {
+  const timeLeft = secondsToTimeUnits(due - currentEpoch);
   const [timer, isTargetAchieved] = useTimer({
     startValues: {
-      days: Math.floor((due - currentEpoch) / (24 * 60 * 60)),
-      hours: Math.floor(((due - currentEpoch) % (24 * 60 * 60)) / (60 * 60)),
-      minutes: Math.floor((((due - currentEpoch) % (24 * 60 * 60)) % (60 * 60)) / 60),
-      seconds: Math.floor((((due - currentEpoch) % (24 * 60 * 60)) % (60 * 60)) % 60),
+      days: timeLeft.days,
+      hours: timeLeft.hours,
+      minutes: timeLeft.minutes,
+      seconds: timeLeft.seconds,
       secondTenths: 0
     },
     countdown: true,
@@ -24,7 +27,7 @@ const TaskTimer = ({ name, currentEpoch, due, handleEdit, handleDelete }) => {
 				{isTargetAchieved || due < Math.round(Date.now() / 1000) ? (
 					<div style={{display: "inline"}}>
 						<span style={{fontWeight: "bold"}}>
-							Completed at {new Date(due*1000).toLocaleString()}
+							Completed at {new Date(due * 1000).toLocaleString()}
 						</span>
 					</div>
 				) : (
@@ -33,9 +36,7 @@ const TaskTimer = ({ name, currentEpoch, due, handleEdit, handleDelete }) => {
 			</div>
 
       <div>
-        {/*
         <button className="btn btn-dark btn-sm me-2" type="button" onClick={handleEdit}>Edit</button>
-        */}
         <button className="btn btn-dark btn-sm" type="button" onClick={handleDelete}>Delete</button>
       </div>
     </div>

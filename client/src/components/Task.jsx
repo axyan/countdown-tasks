@@ -12,6 +12,10 @@ const Task = ({ userId, taskId, taskName, taskDue, updateTasks }) => {
 
   const DOMAIN_NAME = process.env.REACT_APP_DOMAIN_NAME;
 
+  const startTaskEdit = () => {
+    setIsEditing(true);
+  };
+
   const cancelTaskEdit = () => {
     setIsEditing(false);
   };
@@ -30,16 +34,17 @@ const Task = ({ userId, taskId, taskName, taskDue, updateTasks }) => {
         );
         
         if (response.status !== 204) {
-          throw new Error(await response.json());
+          const res = await response.json();
+          throw new Error(res.error);
         }
       } catch (e) {
-        console.log(e);
+        alert(e);
       }
     }
 
-    updateTasks(prevTasks => prevTasks.filter((task) => task.props.taskId !== taskId ));
+    updateTasks(prevTasks => prevTasks.filter((task) => task.props.taskId !== taskId));
   };
-  
+
   const saveTaskEdit = async (nameEdit, dueEdit) => {
     const task = {
       id: taskId,
@@ -47,26 +52,31 @@ const Task = ({ userId, taskId, taskName, taskDue, updateTasks }) => {
       due: dueEdit
     }
 
-    const response = await fetch(
-      `${DOMAIN_NAME}/api/users/${userId}/tasks/${taskId}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': 'Bearer ' + user.token,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify(task)
+    try {
+      const response = await fetch(
+        `${DOMAIN_NAME}/api/users/${userId}/tasks/${taskId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + user.token,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify(task)
+        }
+      );
+
+      if (response.status !== 200) {
+        const res = await response.json();
+        throw new Error(res.error);
       }
-    );
+    } catch (e) {
+      alert(e);
+    }
 
-    setName(name);
-    setDue(due);
+    setName(nameEdit);
+    setDue(dueEdit);
     setIsEditing(false);
-  };
-
-  const startTaskEdit = () => {
-    setIsEditing(true);
   };
 
   return (

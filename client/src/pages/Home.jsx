@@ -1,8 +1,8 @@
-import Tasks from '../components/Tasks';
+import TaskContainer from '../components/TaskContainer';
 
 const Home = () => {
   return (
-    <Tasks />
+    <TaskContainer />
   );
 };
 
