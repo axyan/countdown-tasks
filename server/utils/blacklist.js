@@ -1,4 +1,4 @@
-const redisClient = require('../config/cache');
+const redisClient = require("../config/cache");
 
 exports.add = async (key, expiration) => {
   try {

@@ -1,9 +1,9 @@
-const { body, validationResult } = require('express-validator');
-const CryptoJS = require('crypto-js');
-const jwt = require('jsonwebtoken');
-const passport = require('passport');
+const { body, validationResult } = require("express-validator");
+const CryptoJS = require("crypto-js");
+const jwt = require("jsonwebtoken");
+const passport = require("passport");
 
-const blacklist = require('../utils/blacklist');
+const blacklist = require("../utils/blacklist");
 
 /**
  * Handle GET for '/api/session/user'
@@ -22,17 +22,24 @@ exports.returnUser = (req, res, next) => {
  * @response: JWT token upon successful authentication
  */
 exports.createSession = [
-
   // Sanitize and validate inputs
-  body('email', 'Invalid email or password')
+  body("email", "Invalid email or password")
     .trim()
-    .not().isEmpty().withMessage('Email is required').bail()
-    .isEmail().withMessage('Invalid email format').bail()
+    .not()
+    .isEmpty()
+    .withMessage("Email is required")
+    .bail()
+    .isEmail()
+    .withMessage("Invalid email format")
+    .bail()
     .normalizeEmail()
     .escape(),
-  body('password', 'Invalid email or password')
+  body("password", "Invalid email or password")
     .trim()
-    .not().isEmpty().withMessage('Password is required').bail()
+    .not()
+    .isEmpty()
+    .withMessage("Password is required")
+    .bail()
     .escape(),
 
   // Check for validation errors and login user
@@ -43,33 +50,31 @@ exports.createSession = [
       const validationError = errors.array()[0];
       res.status(200).json({
         success: false,
-        error: validationError.msg
+        error: validationError.msg,
       });
-    
     } else {
       // Authenticate user provided email and password
-      passport.authenticate('local', { session: false }, (err, user, info) => {
-
+      passport.authenticate("local", { session: false }, (err, user, info) => {
         // Error during authentication
         if (err) {
           res.status(200).json({
             success: false,
-            error: 'Error during authentication'
+            error: "Error during authentication",
           });
           next(err);
-        
-        // User not found
+
+          // User not found
         } else if (!user) {
           res.status(200).json({
             success: false,
-            error: 'Invalid email or password'
+            error: "Invalid email or password",
           });
 
-        // Successful authentication
+          // Successful authentication
         } else {
           const payload = {
-            id: user.id
-          }
+            id: user.id,
+          };
 
           // Create JSON web token
           jwt.sign(
@@ -80,7 +85,7 @@ exports.createSession = [
               if (err) {
                 res.status(200).json({
                   success: false,
-                  error: 'Error during authentication'
+                  error: "Error during authentication",
                 });
                 next(err);
               }
@@ -88,15 +93,20 @@ exports.createSession = [
               // Hacky solution to prevent XSS by encrypting JWT token string
               // so that string will need to be decrypted client-side before
               // being sent in authorization header back to server
-              const encryptedJWT = CryptoJS.AES.encrypt(token, process.env.CRYPTOJS_SECRET).toString();
+              const encryptedJWT = CryptoJS.AES.encrypt(
+                token,
+                process.env.CRYPTOJS_SECRET
+              ).toString();
 
-              res.status(200).json({ success: true, id: user.id, token: encryptedJWT });
+              res
+                .status(200)
+                .json({ success: true, id: user.id, token: encryptedJWT });
             }
           );
         }
       })(req, res, next);
     }
-  }
+  },
 ];
 
 /**
@@ -112,6 +122,6 @@ exports.deleteSession = async (req, res, next) => {
   } catch (e) {
     return res
       .status(500)
-      .json({ success: false, error: 'Error deleting session' });
+      .json({ success: false, error: "Error deleting session" });
   }
 };

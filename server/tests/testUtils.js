@@ -1,28 +1,31 @@
-const request = require('supertest');
-const bcrypt = require('bcryptjs');
-const CryptoJS = require('crypto-js');
+const request = require("supertest");
+const bcrypt = require("bcryptjs");
+const CryptoJS = require("crypto-js");
 
-const User = require('../models/user');
-const Task = require('../models/task');
+const User = require("../models/user");
+const Task = require("../models/task");
 
 exports.decodeJWT = (token) => {
-  return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+  return JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
 };
 
 exports.createUserWithJWT = async (app, email, password) => {
   try {
     const user = new User({
       email: email,
-      password: await bcrypt.hash(password, 10)
+      password: await bcrypt.hash(password, 10),
     });
     const savedUser = await user.save();
 
     const res = await request(app)
-      .post('/api/session')
-      .set('Accept', 'application/json')
+      .post("/api/session")
+      .set("Accept", "application/json")
       .send({ email, password });
 
-    const bytes = CryptoJS.AES.decrypt(res.body.token, process.env.CRYPTOJS_SECRET);
+    const bytes = CryptoJS.AES.decrypt(
+      res.body.token,
+      process.env.CRYPTOJS_SECRET
+    );
     const token = bytes.toString(CryptoJS.enc.Utf8);
 
     return { id: savedUser._id.toString(), email, password, token };
@@ -35,7 +38,7 @@ exports.createUser = async (email, password) => {
   try {
     const user = new User({
       email: email,
-      password: await bcrypt.hash(password, 10)
+      password: await bcrypt.hash(password, 10),
     });
     const savedUser = await user.save();
 
@@ -45,7 +48,7 @@ exports.createUser = async (email, password) => {
   }
 };
 
-exports.createTask = async (app, userId, name, due)  => {
+exports.createTask = async (userId, name, due) => {
   try {
     const task = new Task({ name, due });
     const savedTask = await task.save();

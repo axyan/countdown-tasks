@@ -1,29 +1,27 @@
-const request = require('supertest');
-const bcrypt = require('bcryptjs');
+const request = require("supertest");
 
-const app = require('./app.js');
-const mongoTestServer = require('./mongoTestServer');
-const Task = require('../models/task');
-const User = require('../models/user');
-const utils = require('./testUtils');
+const app = require("./app.js");
+const mongoTestServer = require("./mongoTestServer");
+const Task = require("../models/task");
+const User = require("../models/user");
+const utils = require("./testUtils");
 
-const redisClient = require('../config/cache');
+const redisClient = require("../config/cache");
 afterAll(async () => {
-	await redisClient.flushAll();
-	await redisClient.quit()
+  await redisClient.flushAll();
+  await redisClient.quit();
 });
 
 /** Test POST for '/api/users/:userId/tasks' **/
-describe('POST /api/users/:userId/tasks Test Suite', () => {
-
+describe("POST /api/users/:userId/tasks Test Suite", () => {
   const NEW_TASK_1 = {
-    name: 'Task #1',
-    due: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
+    name: "Task #1",
+    due: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
   };
 
   const NEW_TASK_2 = {
-    name: 'Task #2',
-    due: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
+    name: "Task #2",
+    due: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
   };
 
   let POST_USER;
@@ -31,35 +29,39 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
   beforeAll(async () => {
     await mongoTestServer.initialize();
 
-    POST_USER = await utils.createUserWithJWT(app, 'darthvader@stormtrooper.com', 'executeorder66');
+    POST_USER = await utils.createUserWithJWT(
+      app,
+      "darthvader@stormtrooper.com",
+      "executeorder66"
+    );
   });
 
   afterAll(async () => await mongoTestServer.terminate());
 
-  afterEach(async() => {
-    if (await Task.collection.countDocuments() > 0) {
+  afterEach(async () => {
+    if ((await Task.collection.countDocuments()) > 0) {
       await Task.collection.drop();
     }
   });
 
-  test('should return an error if token is not included with request', async () => {
+  test("should return an error if token is not included with request", async () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
-      .set('Accept', 'application/json')
+      .set("Accept", "application/json")
       .send()
       .expect(401);
 
     expect(res.body.error).toBeDefined();
   });
 
-  test('should create a task successfully', async () => {
+  test("should create a task successfully", async () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${POST_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
-        due: NEW_TASK_1.due
+        due: NEW_TASK_1.due,
       })
       .expect(201);
 
@@ -68,14 +70,14 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     expect(res.body.task.due).toEqual(NEW_TASK_1.due);
   });
 
-  test('should create two tasks successfully', async () => {
+  test("should create two tasks successfully", async () => {
     const res1 = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${POST_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
-        due: NEW_TASK_1.due
+        due: NEW_TASK_1.due,
       })
       .expect(201);
 
@@ -85,11 +87,11 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
 
     const res2 = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${POST_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_2.name,
-        due: NEW_TASK_2.due
+        due: NEW_TASK_2.due,
       })
       .expect(201);
 
@@ -98,14 +100,14 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     expect(res2.body.task.due).toEqual(NEW_TASK_2.due);
   });
 
-  test('should return an error if task name not provided', async () => {
+  test("should return an error if task name not provided", async () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${POST_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${POST_USER.token}`)
       .send({
-        name: '',
-        due: NEW_TASK_1.due
+        name: "",
+        due: NEW_TASK_1.due,
       })
       .expect(400);
 
@@ -113,14 +115,14 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     expect(res.body.error).toBeDefined();
   });
 
-  test('should return an error if task due not provided', async () => {
+  test("should return an error if task due not provided", async () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${POST_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
-        due: ''
+        due: "",
       })
       .expect(400);
 
@@ -128,14 +130,14 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     expect(res.body.error).toBeDefined();
   });
 
-  test('should return an error if task due is not an integer', async () => {
+  test("should return an error if task due is not an integer", async () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${POST_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
-        due: '34l5j34k'
+        due: "34l5j34k",
       })
       .expect(400);
 
@@ -143,14 +145,14 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     expect(res.body.error).toBeDefined();
   });
 
-  test('should return an error if task due is less than zero', async () => {
+  test("should return an error if task due is less than zero", async () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${POST_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
-        due: -1
+        due: -1,
       })
       .expect(400);
 
@@ -158,14 +160,14 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
     expect(res.body.error).toBeDefined();
   });
 
-  test('should return an error if task due is in the past', async () => {
+  test("should return an error if task due is in the past", async () => {
     const res = await request(app)
       .post(`/api/users/${POST_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${POST_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${POST_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
-        due: Math.floor(Date.now() / 1000) - (24 * 60 * 60)
+        due: Math.floor(Date.now() / 1000) - 24 * 60 * 60,
       })
       .expect(400);
 
@@ -175,16 +177,15 @@ describe('POST /api/users/:userId/tasks Test Suite', () => {
 });
 
 /** Test GET for '/api/users/:userId/tasks' **/
-describe('GET /api/users/:userId/tasks Test Suite', () => {
-
+describe("GET /api/users/:userId/tasks Test Suite", () => {
   const NEW_TASK_1 = {
-    name: 'Task #1',
-    due: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
+    name: "Task #1",
+    due: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
   };
 
   const NEW_TASK_2 = {
-    name: 'Task #2',
-    due: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
+    name: "Task #2",
+    due: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
   };
 
   let GET_USER;
@@ -192,60 +193,67 @@ describe('GET /api/users/:userId/tasks Test Suite', () => {
   beforeAll(async () => await mongoTestServer.initialize());
   afterAll(async () => await mongoTestServer.terminate());
 
-  beforeEach(async () => GET_USER = await utils.createUserWithJWT(app, 'picklerick@c137.com', 'vindicators'));
-  afterEach(async() => {
-    if (await Task.collection.countDocuments() > 0) {
+  beforeEach(
+    async () =>
+      (GET_USER = await utils.createUserWithJWT(
+        app,
+        "picklerick@c137.com",
+        "vindicators"
+      ))
+  );
+  afterEach(async () => {
+    if ((await Task.collection.countDocuments()) > 0) {
       await Task.collection.drop();
     }
     await User.collection.drop();
   });
 
-  test('should return an error if token is not included with request', async () => {
+  test("should return an error if token is not included with request", async () => {
     const res = await request(app)
       .get(`/api/users/${GET_USER.id}/tasks`)
-      .set('Accept', 'application/json')
+      .set("Accept", "application/json")
       .send()
       .expect(401);
 
     expect(res.body.error).toBeDefined();
   });
 
-  test('should return empty array for new user\'s tasks', async () => {
+  test("should return empty array for new user's tasks", async () => {
     const res = await request(app)
       .get(`/api/users/${GET_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${GET_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${GET_USER.token}`)
       .send()
       .expect(200);
 
     expect(res.body.tasks.length).toEqual(0);
   });
 
-  test('should return array of tasks', async () => {
+  test("should return array of tasks", async () => {
     await request(app)
       .post(`/api/users/${GET_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${GET_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${GET_USER.token}`)
       .send({
         name: NEW_TASK_1.name,
-        due: NEW_TASK_1.due
+        due: NEW_TASK_1.due,
       })
       .expect(201);
 
     await request(app)
       .post(`/api/users/${GET_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${GET_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${GET_USER.token}`)
       .send({
         name: NEW_TASK_2.name,
-        due: NEW_TASK_2.due
+        due: NEW_TASK_2.due,
       })
       .expect(201);
 
     const res = await request(app)
       .get(`/api/users/${GET_USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${GET_USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${GET_USER.token}`)
       .send()
       .expect(200);
 
@@ -254,16 +262,15 @@ describe('GET /api/users/:userId/tasks Test Suite', () => {
 });
 
 /** Test PUT for '/api/users/:userId/tasks' **/
-describe('PUT /api/users/:userId/tasks Test Suite', () => {
-
+describe("PUT /api/users/:userId/tasks Test Suite", () => {
   const CURR_TASK = {
-    name: 'Task #1',
-    due: Math.floor(Date.now() / 1000) + (24 * 60 * 60)
+    name: "Task #1",
+    due: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
   };
 
   const UPDATE_TASK = {
-    newName: 'Task #9000',
-    newDue: Math.floor(Date.now() / 1000) + (24 * 60 * 60 * 7)
+    newName: "Task #9000",
+    newDue: Math.floor(Date.now() / 1000) + 24 * 60 * 60 * 7,
   };
 
   let USER, PUT_TASK;
@@ -271,36 +278,40 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
   beforeAll(async () => {
     await mongoTestServer.initialize();
 
-    USER = await utils.createUserWithJWT(app, 'chickennoodlesoup@soup.com', 'helloworld');
+    USER = await utils.createUserWithJWT(
+      app,
+      "chickennoodlesoup@soup.com",
+      "helloworld"
+    );
   });
 
   afterAll(async () => await mongoTestServer.terminate());
 
   beforeEach(async () => {
-    PUT_TASK = await utils.createTask(app, USER.id, CURR_TASK.name, CURR_TASK.due);
+    PUT_TASK = await utils.createTask(USER.id, CURR_TASK.name, CURR_TASK.due);
   });
 
   afterEach(async () => {
     await Task.collection.drop();
   });
 
-  test('should return an error if token is not included with request', async () => {
+  test("should return an error if token is not included with request", async () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
-      .set('Accept', 'application/json')
+      .set("Accept", "application/json")
       .send()
       .expect(401);
 
     expect(res.body.error).toBeDefined();
   });
 
-  test('should update name of task', async () => {
+  test("should update name of task", async () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${USER.token}`)
       .send({
-        name: UPDATE_TASK.newName
+        name: UPDATE_TASK.newName,
       })
       .expect(200);
 
@@ -309,13 +320,13 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
     expect(res.body.task.due).toEqual(CURR_TASK.due);
   });
 
-  test('should update due of task', async () => {
+  test("should update due of task", async () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${USER.token}`)
       .send({
-        due: UPDATE_TASK.newDue
+        due: UPDATE_TASK.newDue,
       })
       .expect(200);
 
@@ -324,14 +335,14 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
     expect(res.body.task.due).toEqual(UPDATE_TASK.newDue);
   });
 
-  test('should update name and due of task', async () => {
+  test("should update name and due of task", async () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${USER.token}`)
       .send({
         name: UPDATE_TASK.newName,
-        due: UPDATE_TASK.newDue
+        due: UPDATE_TASK.newDue,
       })
       .expect(200);
 
@@ -340,42 +351,42 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
     expect(res.body.task.due).toEqual(UPDATE_TASK.newDue);
   });
 
-  test('should return an error if task due is not an integer', async () => {
+  test("should return an error if task due is not an integer", async () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${USER.token}`)
       .send({
         name: UPDATE_TASK.newName,
-        due: UPDATE_TASK.newDue.toString() + 'a'
+        due: UPDATE_TASK.newDue.toString() + "a",
       })
       .expect(400);
 
     expect(res.body.error).toBeDefined();
   });
 
-  test('should return an error if task due is less than zero', async () => {
+  test("should return an error if task due is less than zero", async () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${USER.token}`)
       .send({
         name: UPDATE_TASK.newName,
-        due: -1
+        due: -1,
       })
       .expect(400);
 
     expect(res.body.error).toBeDefined();
   });
 
-  test('should return an error if task due is in the past', async () => {
+  test("should return an error if task due is in the past", async () => {
     const res = await request(app)
       .put(`/api/users/${USER.id}/tasks/${PUT_TASK.id}`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${USER.token}`)
       .send({
         name: UPDATE_TASK.newName,
-        due: CURR_TASK.due - (24 * 60 * 60)
+        due: CURR_TASK.due - 24 * 60 * 60,
       })
       .expect(400);
 
@@ -384,51 +395,54 @@ describe('PUT /api/users/:userId/tasks Test Suite', () => {
 });
 
 /** Test DELETE for '/api/users/:userId/tasks' **/
-describe('DELETE /api/users/:userId/tasks Test Suite', () => {
-
+describe("DELETE /api/users/:userId/tasks Test Suite", () => {
   let USER, DELETE_TASK;
 
   beforeAll(async () => {
     await mongoTestServer.initialize();
 
-    USER = await utils.createUserWithJWT(app, 'water@ocean.com', 'coralreefs');
+    USER = await utils.createUserWithJWT(app, "water@ocean.com", "coralreefs");
   });
 
   afterAll(async () => await mongoTestServer.terminate());
 
   beforeEach(async () => {
-    DELETE_TASK = await utils.createTask(app, USER.id, 'Task #1', Math.floor(Date.now() / 1000) + (24 * 60 * 60));
+    DELETE_TASK = await utils.createTask(
+      USER.id,
+      "Task #1",
+      Math.floor(Date.now() / 1000) + 24 * 60 * 60
+    );
   });
-  
-  afterEach(async() => {
-    if (await Task.collection.countDocuments() > 0) {
+
+  afterEach(async () => {
+    if ((await Task.collection.countDocuments()) > 0) {
       await Task.collection.drop();
     }
   });
 
-  test('should return an error if token is not included with request', async () => {
+  test("should return an error if token is not included with request", async () => {
     const res = await request(app)
       .delete(`/api/users/${USER.id}/tasks/${DELETE_TASK.id}`)
-      .set('Accept', 'application/json')
+      .set("Accept", "application/json")
       .send()
       .expect(401);
 
     expect(res.body.error).toBeDefined();
   });
 
-  test('should delete one task successfully', async () => {
+  test("should delete one task successfully", async () => {
     // Delete user's only task
     await request(app)
       .delete(`/api/users/${USER.id}/tasks/${DELETE_TASK.id}`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${USER.token}`)
       .expect(204);
 
     // Check user has no tasks
     const res = await request(app)
       .get(`/api/users/${USER.id}/tasks`)
-      .set('Accept', 'application/json')
-      .set('Authorization', `Bearer ${USER.token}`)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${USER.token}`)
       .send()
       .expect(200);
 

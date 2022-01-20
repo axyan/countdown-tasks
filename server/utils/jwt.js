@@ -1,10 +1,10 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 exports.parseAuthHeader = (requestHeader) => {
   const authHeader = requestHeader.authorization;
 
   let token = null;
-  if (authHeader !== undefined && authHeader.startsWith('Bearer ')) {
+  if (authHeader !== undefined && authHeader.startsWith("Bearer ")) {
     token = authHeader.substring(7, authHeader.length);
   }
   return token;

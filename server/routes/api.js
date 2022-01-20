@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require("express");
 const apiRouter = express.Router();
 
-const authRouter = require('./auth');
-const userRouter = require('./user');
-const taskRouter = require('./task');
+const authRouter = require("./auth");
+const userRouter = require("./user");
+const taskRouter = require("./task");
 
 /**
  * API ROUTES
@@ -13,6 +13,6 @@ const taskRouter = require('./task');
 
 apiRouter.use(authRouter);
 apiRouter.use(userRouter);
-apiRouter.use('/users/:userId', taskRouter);
+apiRouter.use("/users/:userId", taskRouter);
 
 module.exports = apiRouter;

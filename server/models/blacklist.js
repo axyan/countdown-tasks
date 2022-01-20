@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
@@ -10,8 +10,8 @@ const blacklistSchema = new Schema({
     type: Date,
     default: Date.now + 60 * 60 * 1000,
     required: true,
-    expires: 0
-  }
+    expires: 0,
+  },
 });
 
-module.exports = mongoose.model('Blacklist', blacklistSchema);
+module.exports = mongoose.model("Blacklist", blacklistSchema);
