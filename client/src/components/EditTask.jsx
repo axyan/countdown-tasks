@@ -1,26 +1,26 @@
 import { useState } from 'react';
 
-import { secondsToTimeUnits } from '../utils/utils';
+import {
+  nowEpoch,
+  secondsToTimeUnits,
+  timeUnitsToSeconds 
+} from '../utils/utils';
 
 const EditTask = ({ name, due, handleSave, handleCancel }) => {
   const [nameEdit, setNameEdit] = useState(name);
-  const timeLeft = secondsToTimeUnits(due - Math.round(Date.now() / 1000));
-  const [dueEdit, setDueEdit] = useState(timeLeft);
+  const timeLeft = secondsToTimeUnits(due - nowEpoch());
+  const [dueEditUnits, setDueEditUnits] = useState(timeLeft);
 
   const handleChange = (event) => {
-    setDueEdit(prevState => ({
+    setDueEditUnits(prevState => ({
       ...prevState,
       [event.target.id]: event.target.value
     }));
   };
 
   const triggerSave = () => {
-    const daysToSeconds = dueEdit.days * 24 * 60 * 60;
-    const hoursToSeconds = dueEdit.hours * 60 * 60;
-    const minutesToSeconds = dueEdit.minutes * 60;
-    const newDue = Math.round(Date.now() / 1000) + daysToSeconds + hoursToSeconds + minutesToSeconds + dueEdit.seconds;
-
-    handleSave(nameEdit, newDue);
+    const dueEpoch = nowEpoch() + timeUnitsToSeconds(dueEditUnits);
+    handleSave(nameEdit, dueEpoch);
   };
 
   return (
@@ -50,7 +50,7 @@ const EditTask = ({ name, due, handleSave, handleCancel }) => {
                 name="days"
                 className="form-control"
                 min="0"
-                value={dueEdit.days}
+                value={dueEditUnits.days}
                 onChange={handleChange}
                 required
               />
@@ -65,7 +65,7 @@ const EditTask = ({ name, due, handleSave, handleCancel }) => {
                 className="form-control"
                 min="0"
                 max="23"
-                value={dueEdit.hours}
+                value={dueEditUnits.hours}
                 onChange={handleChange}
                 required
               />
@@ -80,7 +80,7 @@ const EditTask = ({ name, due, handleSave, handleCancel }) => {
                 className="form-control"
                 min="0"
                 max="59"
-                value={dueEdit.minutes}
+                value={dueEditUnits.minutes}
                 onChange={handleChange}
                 required
               />
@@ -95,7 +95,7 @@ const EditTask = ({ name, due, handleSave, handleCancel }) => {
                 className="form-control"
                 min="0"
                 max="59"
-                value={dueEdit.seconds}
+                value={dueEditUnits.seconds}
                 onChange={handleChange}
                 required
               />

@@ -6,11 +6,12 @@ import TaskForm from './TaskForm';
 import Task from './Task';
 
 const Tasks = () => {
-  const { user } = useAuth();
-  const [tasks, setTasks] = useState([]);
+  const DOMAIN_NAME = process.env.REACT_APP_DOMAIN_NAME;
   const { navigate } = useNavigate();
 
-  const DOMAIN_NAME = process.env.REACT_APP_DOMAIN_NAME;
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState([]);
+
 
   useEffect(() => {
     const fetchTasks = async () => {

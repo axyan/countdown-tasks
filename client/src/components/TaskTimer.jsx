@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import useTimer from 'easytimer-react-hook';
 
-import { secondsToTimeUnits } from '../utils/utils';
+import { nowEpoch, secondsToTimeUnits } from '../utils/utils';
 
-const TaskTimer = ({ name, currentEpoch, due, handleEdit, handleDelete }) => {
-  const timeLeft = secondsToTimeUnits(due - currentEpoch);
+const TaskTimer = ({ name, due, handleEdit, handleDelete }) => {
+  const timeLeft = secondsToTimeUnits(due - nowEpoch());
   const [timer, isTargetAchieved] = useTimer({
     startValues: {
       days: timeLeft.days,
@@ -24,9 +24,9 @@ const TaskTimer = ({ name, currentEpoch, due, handleEdit, handleDelete }) => {
   return (
     <div className="timer-instance d-flex align-items-center justify-content-between">
       <div>{name} -&nbsp;
-				{isTargetAchieved || due < Math.round(Date.now() / 1000) ? (
-					<div style={{display: "inline"}}>
-						<span style={{fontWeight: "bold"}}>
+				{isTargetAchieved || due < nowEpoch() ? (
+					<div className="d-inline">
+						<span className="fw-bold fst-italic">
 							Completed at {new Date(due * 1000).toLocaleString()}
 						</span>
 					</div>

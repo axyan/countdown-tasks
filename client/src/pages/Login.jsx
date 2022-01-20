@@ -11,6 +11,7 @@ const Login = () => {
     email: '',
     password: ''
   });
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (event) => {
     setLoginCred(prevState => ({
@@ -23,18 +24,23 @@ const Login = () => {
     event.preventDefault();
 
     try {
-      const response = await login(loginCred.email, loginCred.password);
+      await login(loginCred.email, loginCred.password);
 
       setLoginCred({
         email: '',
         password: ''
       });
 
-      if (response.error === undefined) {
-        navigate('/');
-      }
+      // Navigate back to home page if no login errors;
+      // cannot use finally block since React cannot update
+      // on an unmounted componenet due to navigate()
+      navigate('/');
     } catch (e) {
-      console.log(e);
+      setErrorMessage(e.message);
+      setLoginCred({
+        email: '',
+        password: ''
+      });
     }
   };
 
@@ -75,6 +81,7 @@ const Login = () => {
           <button type="submit" className="btn btn-primary mt-3">Log in</button>
         </form>
       </div>
+      {errorMessage && <div className="error text-center mt-3"> {errorMessage} </div>}
     </div>
   );
 };

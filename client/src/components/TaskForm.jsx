@@ -1,8 +1,10 @@
 import { useState } from 'react';
 
+import { nowEpoch, timeUnitsToSeconds } from '../utils/utils';
+
 const TaskForm = ({ submitTask }) => {
   const [taskName, setTaskName] = useState('');
-  const [due, setDue] = useState({
+  const [dueUnits, setDueUnits] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
@@ -10,7 +12,7 @@ const TaskForm = ({ submitTask }) => {
   });
 
   const handleChange = (event) => {
-    setDue(prevState => ({
+    setDueUnits(prevState => ({
       ...prevState,
       [event.target.id]: event.target.value
     }));
@@ -19,15 +21,11 @@ const TaskForm = ({ submitTask }) => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const daysInSeconds = due.days * 24 * 60 * 60;
-    const hoursInSeconds = due.hours * 60 * 60;
-    const minutesInSeconds = due.minutes * 60;
-    const epochTaskDue = Math.floor(Date.now() / 1000) + daysInSeconds + hoursInSeconds + minutesInSeconds + +due.seconds;
-
-    submitTask(taskName, epochTaskDue);
+    const taskDueEpoch = nowEpoch() + timeUnitsToSeconds(dueUnits);
+    submitTask(taskName, taskDueEpoch);
     
     setTaskName('');
-    setDue({
+    setDueUnits({
       days: 0,
       hours: 0,
       minutes: 0,
@@ -62,7 +60,7 @@ const TaskForm = ({ submitTask }) => {
                 name="days"
                 className="form-control"
                 min="0"
-                value={due.days}
+                value={dueUnits.days}
                 onChange={handleChange}
                 required
               />
@@ -77,7 +75,7 @@ const TaskForm = ({ submitTask }) => {
                 className="form-control"
                 min="0"
                 max="23"
-                value={due.hours}
+                value={dueUnits.hours}
                 onChange={handleChange}
                 required
               />
@@ -92,7 +90,7 @@ const TaskForm = ({ submitTask }) => {
                 className="form-control"
                 min="0"
                 max="59"
-                value={due.minutes}
+                value={dueUnits.minutes}
                 onChange={handleChange}
                 required
               />
@@ -107,7 +105,7 @@ const TaskForm = ({ submitTask }) => {
                 className="form-control"
                 min="0"
                 max="59"
-                value={due.seconds}
+                value={dueUnits.seconds}
                 onChange={handleChange}
                 required
               />

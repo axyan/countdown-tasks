@@ -18,7 +18,21 @@ export const secondsToTimeUnits = (secondsLeft) => {
 export const timeUnitsToSeconds = (time) => {
   const daysToSeconds = time.days * SECS_IN_DAY;
   const hoursToSeconds = time.hours * SECS_IN_HOUR;
-  const minutesToSeconds = time.hours * SECS_IN_MINUTE;
+  const minutesToSeconds = time.minutes * SECS_IN_MINUTE;
 
-  return daysToSeconds + hoursToSeconds + minutesToSeconds + time.seconds;
+  // when adding tasks, input label returns a string type when type
+  // attribute is 'number'; +time.seconds converts to number type
+  return daysToSeconds + hoursToSeconds + minutesToSeconds + +time.seconds;
+};
+
+export const nowEpoch = () => {
+  return Math.round(Date.now() / 1000);
+};
+
+export const parseJWT = (token) => {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return null;
+  }
 };

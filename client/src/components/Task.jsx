@@ -46,32 +46,34 @@ const Task = ({ userId, taskId, taskName, taskDue, updateTasks }) => {
   };
 
   const saveTaskEdit = async (nameEdit, dueEdit) => {
-    const task = {
-      id: taskId,
-      name: nameEdit,
-      due: dueEdit
-    }
-
-    try {
-      const response = await fetch(
-        `${DOMAIN_NAME}/api/users/${userId}/tasks/${taskId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer ' + user.token,
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include',
-          body: JSON.stringify(task)
-        }
-      );
-
-      if (response.status !== 200) {
-        const res = await response.json();
-        throw new Error(res.error);
+    if (user != null) {
+      const task = {
+        id: taskId,
+        name: nameEdit,
+        due: dueEdit
       }
-    } catch (e) {
-      alert(e);
+
+      try {
+        const response = await fetch(
+          `${DOMAIN_NAME}/api/users/${userId}/tasks/${taskId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'Bearer ' + user.token,
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(task)
+          }
+        );
+
+        if (response.status !== 200) {
+          const res = await response.json();
+          throw new Error(res.error);
+        }
+      } catch (e) {
+        alert(e);
+      }
     }
 
     setName(nameEdit);
@@ -84,7 +86,7 @@ const Task = ({ userId, taskId, taskName, taskDue, updateTasks }) => {
       {isEditing ? (
         <EditTask name={name} due={due} handleSave={saveTaskEdit} handleCancel={cancelTaskEdit} />
       ) : (
-        <TaskTimer name={name} currentEpoch={Math.floor(Date.now() / 1000)} due={due} handleEdit={startTaskEdit} handleDelete={deleteTask} />
+        <TaskTimer name={name} due={due} handleEdit={startTaskEdit} handleDelete={deleteTask} />
       )}
     </div>
   );

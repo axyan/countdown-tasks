@@ -20,9 +20,7 @@ const Header = () => {
 
           {user ? (
             <form className="d-flex">
-              {/*
               <Link to="/profile" className="btn btn-primary me-3">Profile</Link>
-              */}
               <button className="btn btn-secondary" onClick={signout}>Sign out</button>
             </form>
           ) : (

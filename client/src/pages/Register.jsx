@@ -12,6 +12,7 @@ const Register = () => {
     password: '',
     confirmPassword: ''
   });
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (event) => {
     setRegistration(prevState => ({
@@ -20,19 +21,22 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const response = register(registration.email, registration.password, registration.confirmPassword);
+    try {
+      await register(registration.email, registration.password, registration.confirmPassword);
 
-    setRegistration({
-      email: '',
-      password: '',
-      confirmPassword: ''
-    });
-
-    if (response.error === undefined) {
+      // Navigate to login page if no registration errors
       navigate('/login');
+    } catch (e) {
+      setErrorMessage(e.message);
+    } finally {
+      setRegistration(prevRegistration => ({
+        ...prevRegistration,
+        password: '',
+        confirmPassword: ''
+      }));
     }
   };
 
@@ -86,6 +90,7 @@ const Register = () => {
           <button type="submit" className="btn btn-primary mt-3">Sign up</button>
         </form>
       </div>
+      {errorMessage && <div className="error text-center mt-3"> {errorMessage} </div>}
     </div>
   );
 };
