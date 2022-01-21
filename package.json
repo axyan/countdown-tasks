@@ -1,24 +1,24 @@
 {
   "name": "countdown-tasks",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Tasks with a countdown.",
+  "private": true,
   "scripts": {
     "dev": "concurrently \"npm run client\" \"npm run server\"",
     "client": "cd client && npm start",
     "server": "cd server && npm run dev",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cd server && npm run test"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/axyan/countdown-tasks.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Andrew Yan",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/axyan/countdown-tasks/issues"
   },
-  "homepage": "https://github.com/axyan/countdown-tasks#readme",
+  "homepage": "https://github.com/axyan/countdown-tasks",
   "devDependencies": {
     "concurrently": "^6.4.0"
   }

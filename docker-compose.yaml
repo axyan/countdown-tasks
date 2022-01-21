@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  redis:
+    image: redis
+    mem_limit: 512m
+    cpus: 1
+    ports:
+      - 6379:6379
+    volumes:
+      - $PWD/dev/database/redis:/data

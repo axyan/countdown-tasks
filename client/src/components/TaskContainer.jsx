@@ -72,6 +72,7 @@ const Tasks = () => {
           return;
         } else {
           navigate('/login');
+          return;
         }
       }
 
