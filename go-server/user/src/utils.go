@@ -27,32 +27,28 @@ func (u *UserService) EmailExists(email string) (bool, error) {
 
 // Sanitize sanitizes user input for email and password by trimming whitespace
 // and escaping characters: <, >, &, ', and "
-func (u *Credentials) Sanitize() {
-	u.Email = html.EscapeString(strings.TrimSpace(u.Email))
-	u.Password = html.EscapeString(strings.TrimSpace(u.Password))
+func (c *Credentials) Sanitize() {
+	c.Email = html.EscapeString(strings.TrimSpace(c.Email))
+	c.Password = html.EscapeString(strings.TrimSpace(c.Password))
 }
 
 // Validate validates user input for email and password to ensure valid
 // format and length
-func (u Credentials) Validate() error {
-	// Use go-validator?
-	//validate := validator.New()
-	//return validate.Struct(u)
-
-	if _, err := mail.ParseAddress(u.Email); err != nil {
+func (c Credentials) Validate() error {
+	if _, err := mail.ParseAddress(c.Email); err != nil {
 		return errors.New("invalid email")
 	}
 
 	switch {
-	case len(u.Email) == 0:
+	case len(c.Email) == 0:
 		return errors.New("email cannot be empty")
-	case len(u.Password) == 0:
+	case len(c.Password) == 0:
 		return errors.New("password cannot be empty")
-	case len(u.Password) <= 8:
+	case len(c.Password) <= 8:
 		return errors.New("password must be greater than 8 characters")
 	}
 
-	if len(u.ConfirmPassword) != 0 && u.ConfirmPassword != u.Password {
+	if len(c.ConfirmPassword) != 0 && c.ConfirmPassword != c.Password {
 		return errors.New("passwords do not match")
 	}
 
