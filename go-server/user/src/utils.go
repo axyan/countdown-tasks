@@ -1,7 +1,6 @@
 package user
 
 import (
-	"database/sql"
 	"errors"
 	"html"
 	"net/mail"
@@ -11,19 +10,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// EmailExists checks if email exists in database
-func (u *UserService) EmailExists(email string) (bool, error) {
-	var emailExists string
-	query := "SELECT email FROM users WHERE email = $1;"
-	if err := u.Database().QueryRow(query, email).Scan(&emailExists); err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
-}
 
 // Sanitize sanitizes user input for email and password by trimming whitespace
 // and escaping characters: <, >, &, ', and "

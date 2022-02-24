@@ -39,16 +39,14 @@ func (u *UserService) CreateUser(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		statement := "INSERT INTO users (email, password) VALUES ($1, $2);"
-		_, err = u.Database().Exec(statement, newUserCred.Email, hashedPassword)
-		if err != nil {
-			u.Logger().Printf("[ERROR] %s for %s", err.Error(), newUserCred.Email)
+		if err = u.AddUserToDB(newUserCred.Email, hashedPassword); err != nil {
+			u.Logger().Printf("[ERROR] while adding new user %s: %s", newUserCred.Email, err.Error())
 			return
 		}
-		u.Logger().Printf("CREATED USER FOR %s", newUserCred.Email)
+		u.Logger().Printf("[INFO] created new user %s", newUserCred.Email)
 	} else {
+		u.Logger().Printf("[WARNING] while adding new user that exists: %s", newUserCred.Email)
 		//TODO: EMAIL PASSWORD RESET
-		u.Logger().Printf("[ERROR] USER %s ALREADY EXISTS", newUserCred.Email)
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -56,7 +54,7 @@ func (u *UserService) CreateUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func (u *UserService) UpdateUser(w http.ResponseWriter, req *http.Request) {
-	//TODO
+	//TODO: Update user info
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -64,10 +62,9 @@ func (u *UserService) UpdateUser(w http.ResponseWriter, req *http.Request) {
 func (u *UserService) DeleteUser(w http.ResponseWriter, req *http.Request) {
 	// TODO Middleware to attach user id from JWT
 	var userId uint
-	statement := "DELETE FROM users WHERE id = $1;"
-	_, err := u.Database().Exec(statement, userId)
+	err := u.DeleteUserFromDB(userId)
 	if err != nil {
-		u.Logger().Printf("[ERROR] while deleting user with ID %d: %s", userId, err.Error())
+		u.Logger().Printf("[ERROR] while deleting user %d: %s", userId, err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
