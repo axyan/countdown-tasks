@@ -2,10 +2,11 @@ services:
   redis:
     image: redis
     restart: always
-    container_name: 'redis_authentication_db'
+    container_name: 'redis_auth_db'
+    command: redis-server --requirepass 'password'
     cpus: 1
     mem_limit: 512m
     ports:
       - '6379:6379'
     volumes:
-      - './dev/redis:/authentication/data'
+      - './dev/redis:/auth/data'

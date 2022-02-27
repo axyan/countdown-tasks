@@ -13,10 +13,12 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type IService interface {
 	Name() string
+	Broker() *amqp.Connection
 	Database() *sql.DB
 	Logger() *log.Logger
 	Router() *httprouter.Router
@@ -27,6 +29,7 @@ type IService interface {
 
 type service struct {
 	name   string
+	broker *amqp.Connection
 	db     *sql.DB
 	logger *log.Logger
 	router *httprouter.Router
@@ -44,6 +47,10 @@ func NewService(name string, config Config) IService {
 
 func (s *service) Name() string {
 	return s.name
+}
+
+func (s *service) Broker() *amqp.Connection {
+	return s.broker
 }
 
 func (s *service) Database() *sql.DB {
@@ -64,16 +71,47 @@ func (s *service) Server() *http.Server {
 
 func (s *service) Run() (<-chan os.Signal, error) {
 	var err error
-	s.db, err = sql.Open(s.config.DBDriver, s.config.DBConnURI)
+
+	s.broker, err = amqp.Dial(s.config.RabbitMQConnURI)
 	if err != nil {
-		s.logger.Printf("[ERROR] while opening sql database: %s", err.Error())
+		s.logger.Printf("[ERROR] while opening connection to RabbitMQ: %s", err.Error())
 		return nil, err
 	}
-	// Ensures valid connection since sql.Open does not
-	// always establish a connection to the database
-	if err := s.db.Ping(); err != nil {
-		s.logger.Printf("[ERROR] while pinging sql database: %s", err.Error())
+
+	ch, err := s.broker.Channel()
+	if err != nil {
+		s.logger.Printf("[ERROR] while opening RabbitMQ channel: %s", err.Error())
 		return nil, err
+	}
+	defer ch.Close()
+
+	for _, queueName := range s.config.RabbitMQQueues {
+		_, err = ch.QueueDeclare(
+			queueName,
+			false,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			s.logger.Printf("[ERROR] while declaring RabbitMQ queues: %s", err.Error())
+			return nil, err
+		}
+	}
+
+	if s.config.DBConnURI != "" {
+		s.db, err = sql.Open(s.config.DBDriver, s.config.DBConnURI)
+		if err != nil {
+			s.logger.Printf("[ERROR] while opening sql database: %s", err.Error())
+			return nil, err
+		}
+		// Ensures valid connection since sql.Open does not
+		// always establish a connection to the database
+		if err := s.db.Ping(); err != nil {
+			s.logger.Printf("[ERROR] while pinging sql database: %s", err.Error())
+			return nil, err
+		}
 	}
 
 	s.router = newRouter()
@@ -96,10 +134,20 @@ func (s *service) Run() (<-chan os.Signal, error) {
 
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			if err := s.db.Close(); err != nil {
-				s.logger.Printf("[ERROR] while closing database connection: %s", err.Error())
+			s.logger.Println("[ERROR] while serving server: %s", err.Error())
+			s.logger.Println("Closing all open connections...")
+
+			if err := s.broker.Close(); err != nil {
+				s.logger.Printf("[ERROR] while closing RabbitMQ connection: %s", err.Error())
 			}
-			s.logger.Fatalf("[ERROR] while serving server: %s", err.Error())
+
+			if s.config.DBConnURI != "" {
+				if err := s.db.Close(); err != nil {
+					s.logger.Printf("[ERROR] while closing database connection: %s", err.Error())
+				}
+			}
+
+			s.logger.Fatalf("All connections closed")
 		}
 	}()
 	s.logger.Printf("[START] Listening on: %s", s.config.Address)
@@ -110,8 +158,14 @@ func (s *service) Run() (<-chan os.Signal, error) {
 func (s *service) Shutdown(ctx context.Context) {
 	s.logger.Println("[STOP] Graceful shutdown initiated")
 
-	if err := s.db.Close(); err != nil {
-		s.logger.Printf("[ERROR] while closing database connection: %s", err.Error())
+	if err := s.broker.Close(); err != nil {
+		s.logger.Printf("[ERROR] while closing RabbitMQ connection: %s", err.Error())
+	}
+
+	if s.config.DBConnURI != "" {
+		if err := s.db.Close(); err != nil {
+			s.logger.Printf("[ERROR] while closing database connection: %s", err.Error())
+		}
 	}
 
 	s.server.SetKeepAlivesEnabled(false)
@@ -120,26 +174,4 @@ func (s *service) Shutdown(ctx context.Context) {
 	}
 
 	s.logger.Println("[STOP] Graceful shutdown completed")
-}
-
-func logRequestsMiddleware(handler http.Handler, logger *log.Logger) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		lw := newLoggingResponseWriter(w)
-		handler.ServeHTTP(lw, r)
-		logger.Printf("%s %s %d", r.Method, r.URL.String(), lw.statusCode)
-	})
-}
-
-type loggingResponseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func newLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
-	return &loggingResponseWriter{w, 200}
-}
-
-func (lw *loggingResponseWriter) WriteHeader(statusCode int) {
-	lw.ResponseWriter.WriteHeader(statusCode)
-	lw.statusCode = statusCode
 }
