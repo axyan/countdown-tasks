@@ -1,10 +1,23 @@
-version: "3.9"
 services:
+  mongo:
+    image: mongo
+    restart: always
+    container_name: 'mongo_user_db'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - 27017:27017
+    volumes:
+      - ./dev/mongo:/user/data
+
   redis:
     image: redis
-    mem_limit: 512m
+    restart: always
+    container_name: 'redis_blacklist_db'
     cpus: 1
+    mem_limit: 512m
     ports:
       - 6379:6379
     volumes:
-      - $PWD/dev/database/redis:/data
+      - ./dev/database/redis:/data
