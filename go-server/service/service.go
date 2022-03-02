@@ -14,6 +14,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/rs/cors"
 )
 
 type IService interface {
@@ -25,6 +26,7 @@ type IService interface {
 	Server() *http.Server
 	Run() (<-chan os.Signal, error)
 	Shutdown(ctx context.Context)
+	Validate(token string) (string, bool, error)
 }
 
 type service struct {
@@ -116,9 +118,17 @@ func (s *service) Run() (<-chan os.Signal, error) {
 
 	s.router = newRouter()
 
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:8080"},
+		AllowedMethods: []string{http.MethodOptions, http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+		//AllowedHeaders:   []string{"Accept", "Content-Type"},
+		AllowCredentials: true,
+	})
+	handler := c.Handler(s.router)
+
 	s.server = &http.Server{
 		Addr:         s.config.Address,
-		Handler:      logRequestsMiddleware(s.router, s.logger),
+		Handler:      logRequestsMiddleware(handler, s.logger),
 		ErrorLog:     s.logger,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -134,8 +144,8 @@ func (s *service) Run() (<-chan os.Signal, error) {
 
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			s.logger.Println("[ERROR] while serving server: %s", err.Error())
-			s.logger.Println("Closing all open connections...")
+			s.logger.Printf("[ERROR] while serving server: %s", err.Error())
+			s.logger.Println("[INFO] closing all open connections...")
 
 			if err := s.broker.Close(); err != nil {
 				s.logger.Printf("[ERROR] while closing RabbitMQ connection: %s", err.Error())
@@ -147,7 +157,7 @@ func (s *service) Run() (<-chan os.Signal, error) {
 				}
 			}
 
-			s.logger.Fatalf("All connections closed")
+			s.logger.Fatalf("[INFO] all connections closed")
 		}
 	}()
 	s.logger.Printf("[START] Listening on: %s", s.config.Address)

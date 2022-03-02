@@ -10,10 +10,10 @@ import (
 
 func (u *UserService) InitializeRoutes() {
 	var routes = service.Routes{
-		service.Route{Method: http.MethodPost, Path: "/temp", HandlerFunc: u.temp},
-		service.Route{Method: http.MethodPost, Path: "/login", HandlerFunc: u.Login},
+		//service.Route{Method: http.MethodPost, Path: "/temp", HandlerFunc: u.temp},
+		service.Route{Method: http.MethodPost, Path: "/api/session", HandlerFunc: u.Login},
 		service.Route{Method: http.MethodPost, Path: "/users", HandlerFunc: u.CreateUser},
-		service.Route{Method: http.MethodPut, Path: "/users/:userId", HandlerFunc: u.UpdateUser},
+		//service.Route{Method: http.MethodPut, Path: "/users/:userId", HandlerFunc: u.UpdateUser},
 		service.Route{Method: http.MethodDelete, Path: "/users/:userId", HandlerFunc: u.DeleteUser},
 	}
 

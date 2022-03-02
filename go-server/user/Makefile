@@ -3,7 +3,7 @@ all user-service: run
 
 .PHONY: install
 install:
-	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	which migrate || go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 .PHONY: build
 build:
@@ -16,7 +16,7 @@ run: up build sleep-1 migrate-up
 .PHONY: sleep-1
 # Used to delay migrations in run command above or else error since docker not fully up
 sleep-1:
-	sleep 1
+	sleep 1.5
 
 .PHONY: clean
 clean: down

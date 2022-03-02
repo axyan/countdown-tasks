@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"runtime"
 	"strings"
@@ -19,6 +21,8 @@ type AuthService struct {
 	service.IService
 	*BlacklistDB
 }
+
+type ValidationResponse service.ValidationResponse
 
 func NewAuthService(config service.Config) *AuthService {
 	return &AuthService{
@@ -101,25 +105,62 @@ func (a *AuthService) authWorker(workerId int, msgErrChan chan error) {
 	for msg := range msgs {
 		a.Logger().Printf("[INFO] Worker %d - received message: %s", workerId, string(msg.Body))
 
-		var reply = ""
+		var response ValidationResponse
 		command := strings.Split(msg.RoutingKey, ".")[1]
 		switch command {
+
 		case "generate":
-			reply, err = generateToken(string(msg.Body))
+			token, err := generateToken(string(msg.Body))
 			if err != nil {
-				a.Logger().Printf("[INFO] Worker %d - error generating token: %s", workerId, err.Error())
-				reply = "internal server error" // Probably need to standardize this for client
+				a.Logger().Printf("[ERROR] Worker %d - error generating token: %s", workerId, err.Error())
+				response = ValidationResponse{
+					"",
+					"",
+					err.Error(),
+				}
+				break
+			}
+			response = ValidationResponse{
+				"",
+				token,
+				"",
 			}
 
 		case "validate":
-			reply, err = a.Validate(string(msg.Body))
+			claims, isValid, err := a.Validate(string(msg.Body))
+
 			if err != nil {
-				a.Logger().Printf("[INFO] Worker %d - error validating token: %s", workerId, err.Error())
-				reply = "false" // Ensure reply is false
+				a.Logger().Printf("[ERROR] Worker %d - error validating token: %v", workerId, err)
+				response = ValidationResponse{
+					"",
+					"",
+					err.Error(),
+				}
+				break
+			} else if !isValid {
+				response = ValidationResponse{
+					"",
+					"",
+					"invalid token",
+				}
+				break
+			}
+			response = ValidationResponse{
+				claims.UserID,
+				"",
+				"",
 			}
 
 		default:
-			a.Logger().Printf("[INFO] Worker %d - received unknown command for routing key: %s", workerId, msg.RoutingKey)
+			a.Logger().Printf("[ERROR] Worker %d - received unknown command for routing key: %s", workerId, msg.RoutingKey)
+			return
+		}
+
+		// Serialize response to bytes
+		var b bytes.Buffer
+		encoder := json.NewEncoder(&b)
+		if err := encoder.Encode(response); err != nil {
+			a.Logger().Printf("[ERROR] Worker %d - while encoding response: %v", workerId, response)
 			return
 		}
 
@@ -130,14 +171,14 @@ func (a *AuthService) authWorker(workerId int, msgErrChan chan error) {
 			false,
 			amqp.Publishing{
 				ContentType: "application/json",
-				Body:        []byte(reply),
+				Body:        b.Bytes(),
 			},
 		)
 		if err != nil {
 			msgErrChan <- err
 		}
 
-		a.Logger().Printf("[INFO] Worker %d - published message: %s", workerId, reply)
+		a.Logger().Printf("[INFO] Worker %d - published message: %s", workerId, b.String())
 
 		if err := ch.Ack(msg.DeliveryTag, false); err != nil {
 			msgErrChan <- err

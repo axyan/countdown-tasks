@@ -1,5 +1,5 @@
 services:
-  db:
+  user_db:
     image: postgres
     restart: always
     container_name: 'postgres_user_db'
