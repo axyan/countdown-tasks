@@ -23,9 +23,13 @@ func (u *UserService) UpdateUserInDB(id uuid.UUID) error {
 }
 
 // DeleteUserFromDB deletes a user from the database
-func (u *UserService) DeleteUserFromDB(id uuid.UUID) error {
+func (u *UserService) DeleteUserFromDB(id string) error {
+	idUUID, err := uuid.Parse(id)
+	if err != nil {
+		return err
+	}
 	statement := "DELETE FROM users WHERE id = $1;"
-	_, err := u.Database().Exec(statement, id)
+	_, err = u.Database().Exec(statement, idUUID)
 	if err != nil {
 		return err
 	}

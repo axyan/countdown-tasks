@@ -1,20 +1,19 @@
 package user
 
 import (
-	"encoding/json"
+	"context"
 	"net/http"
 
 	"github.com/axyan/countdown-tasks/service"
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+// InitializeRoutes initializes the routes and handlers for the user service
 func (u *UserService) InitializeRoutes() {
 	var routes = service.Routes{
-		//service.Route{Method: http.MethodPost, Path: "/temp", HandlerFunc: u.temp},
-		service.Route{Method: http.MethodPost, Path: "/api/session", HandlerFunc: u.Login},
+		service.Route{Method: http.MethodPost, Path: "/login", HandlerFunc: u.Login},
 		service.Route{Method: http.MethodPost, Path: "/users", HandlerFunc: u.CreateUser},
-		//service.Route{Method: http.MethodPut, Path: "/users/:userId", HandlerFunc: u.UpdateUser},
-		service.Route{Method: http.MethodDelete, Path: "/users/:userId", HandlerFunc: u.DeleteUser},
+		//service.Route{Method: http.MethodPut, Path: "/users/:userId", HandlerFunc: u.isAuth(u.UpdateUser)},
+		service.Route{Method: http.MethodDelete, Path: "/users/:userId", HandlerFunc: u.isAuth(u.DeleteUser)},
 	}
 
 	for _, route := range routes {
@@ -22,55 +21,42 @@ func (u *UserService) InitializeRoutes() {
 	}
 }
 
-func (u *UserService) temp(w http.ResponseWriter, r *http.Request) {
-	type Res struct {
-		Token string
-	}
-	var temp Res
-	if err := json.NewDecoder(r.Body).Decode(&temp); err != nil {
-		http.Error(w, "Error reading token from body", http.StatusOK)
-		return
-	}
+// Use as key type for context key
+type ctxKey int
 
-	ch, err := u.Broker().Channel()
-	if err != nil {
-		u.Logger().Println(err)
-	}
-	defer ch.Close()
+// Use as key in context for user id of type string
+const idKey ctxKey = ctxKey(0)
 
-	msgs, err := ch.Consume(
-		"amq.rabbitmq.reply-to",
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		u.Logger().Println(err)
-	}
+// getIDFromContext retrieves user id from request context that was attached
+// in middleware isAuth
+func getIDFromContext(ctx context.Context) (string, bool) {
+	id, ok := ctx.Value(idKey).(string)
+	return id, ok
+}
 
-	err = ch.Publish(
-		"amq.topic",
-		"auth.validate",
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        []byte(temp.Token),
-			ReplyTo:     "amq.rabbitmq.reply-to",
-		},
-	)
-	if err != nil {
-		u.Logger().Println(err)
-	}
+// isAuth middleware that checks for a valid token string and attaches user id
+// from parsed token to the request context
+func (u *UserService) isAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tokenCookie, err := r.Cookie("token")
+		if err != nil {
+			u.Logger().Printf("[ERROR] while trying to parse token cookie: %v", err)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
 
-	msg := <-msgs
+		userId, isValid, err := u.Validate(tokenCookie.Value)
+		if err != nil || !isValid {
+			if err != nil {
+				u.Logger().Printf("[ERROR] while validating cookie: %v", err)
+			}
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(string(msg.Body)); err != nil {
-		u.Logger().Println(err)
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, idKey, userId)
+		req := r.WithContext(ctx)
+		next(w, req)
 	}
 }

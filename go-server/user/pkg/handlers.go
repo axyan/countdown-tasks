@@ -3,8 +3,6 @@ package user
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/google/uuid"
 )
 
 type Credentials struct {
@@ -14,7 +12,6 @@ type Credentials struct {
 }
 
 func (u *UserService) Login(w http.ResponseWriter, req *http.Request) {
-	// TODO: Set same headers in middleware + gzip
 	var userLogin Credentials
 	if err := json.NewDecoder(req.Body).Decode(&userLogin); err != nil {
 		u.Logger().Printf("[ERROR] while parsing request body: %v", err)
@@ -52,6 +49,7 @@ func (u *UserService) Login(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// TODO: Refactor to pass token as encrypted string due to frontend design
 	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    token,
@@ -103,7 +101,7 @@ func (u *UserService) CreateUser(w http.ResponseWriter, req *http.Request) {
 		u.Logger().Printf("[INFO] created new user: %s", newUserCred.Email)
 	} else {
 		u.Logger().Printf("[WARNING] new user already exists: %s", newUserCred.Email)
-		//TODO: EMAIL PASSWORD RESET - EMAIL SERVICE
+		// TODO: EMAIL PASSWORD RESET - EMAIL SERVICE
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -111,52 +109,26 @@ func (u *UserService) CreateUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func (u *UserService) UpdateUser(w http.ResponseWriter, req *http.Request) {
-	tokenCookie, err := req.Cookie("token")
-	if err != nil {
-		u.Logger().Printf("[ERROR] while trying to parse 'token' cookie: %v", err)
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	u.Logger().Println(tokenCookie.Value)
-
-	//TODO: Update user info
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	// TODO: Update user credentials
+	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	//w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	//w.WriteHeader(http.StatusOK)
 }
 
-func (u *UserService) DeleteUser(w http.ResponseWriter, req *http.Request) {
-	tokenCookie, err := req.Cookie("token")
+func (u *UserService) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	id, ok := getIDFromContext(r.Context())
+	if !ok {
+		u.Logger().Printf("[ERROR] while getting user id from request context")
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	err := u.DeleteUserFromDB(id)
 	if err != nil {
-		u.Logger().Printf("[ERROR] while trying to parse token cookie: %v", err)
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		u.Logger().Printf("[ERROR] while deleting user %s: %v", id, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-
-	userId, isValid, err := u.Validate(tokenCookie.Value)
-	if err != nil || !isValid {
-		if err != nil {
-			u.Logger().Printf("[ERROR] while validating cookie: %v", err)
-		}
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-
-	userUUID, err := uuid.Parse(userId)
-	if err != nil {
-		u.Logger().Printf("[ERROR] while parsing user id: %v", err)
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-
-	u.Logger().Println(userUUID)
-
-	//err = u.DeleteUserFromDB(userUUID)
-	//if err != nil {
-	//	u.Logger().Printf("[ERROR] while deleting user %v: %v", userId, err)
-	//	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	//	return
-	//}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusNoContent)
