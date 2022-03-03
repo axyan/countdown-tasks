@@ -20,12 +20,12 @@ func main() {
 	svc := auth.NewAuthService(config)
 	stop, errChan, err := svc.Start()
 	if err != nil {
-		svc.Logger().Fatalf("[ERROR] while starting service: %s", err.Error())
+		svc.Logger().Fatalf("[ERROR] while starting service: %v", err)
 	}
 
 	go func() {
 		for err := range errChan {
-			svc.Logger().Printf("[ERROR] while consuming requests: %s", err.Error())
+			svc.Logger().Printf("[ERROR] while consuming requests: %v", err)
 		}
 	}()
 
