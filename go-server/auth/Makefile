@@ -3,24 +3,27 @@ all auth-service: run
 
 .PHONY: build
 build:
-	go build -o auth-service pkg/server/main.go
+	@go build -o auth-service pkg/server/main.go
 
 .PHONY: run
 run: up build
-	bash -c "trap 'make clean' EXIT; ./auth-service"
+	@echo "----------> Starting Auth Service..."
+	@bash -c "trap '$(MAKE) clean --no-print-directory' EXIT; ./auth-service"
 
 .PHONY: clean
 clean: down
-	go clean
-	rm auth-service
+	@go clean
+	@-rm auth-service || true
 
 .PHONY: up
 up:
-	docker compose up -d
+	@echo "----------> Starting Auth Service containers..."
+	@docker compose up -d
 
 .PHONY: down
 down:
-	docker compose down
+	@echo "----------> Stopping Auth Service containers..."
+	@docker compose down
 
 .PHONY: redis-cli-auth
 redis-cli-auth: up
