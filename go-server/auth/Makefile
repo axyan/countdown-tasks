@@ -23,5 +23,5 @@ down:
 	docker compose down
 
 .PHONY: redis-cli-auth
-redis-cli-auth:
+redis-cli-auth: up
 	docker exec -it redis_auth_db redis-cli -a password
