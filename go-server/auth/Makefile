@@ -1,3 +1,5 @@
+MAKEFLAGS += --no-print-directory
+
 .PHONY: all auth-service
 all auth-service: run
 
@@ -8,7 +10,7 @@ build:
 .PHONY: run
 run: up build
 	@echo "----------> Starting Auth Service..."
-	@bash -c "trap '$(MAKE) clean --no-print-directory' EXIT; ./auth-service"
+	@bash -c "trap '$(MAKE) clean' EXIT; ./auth-service"
 
 .PHONY: clean
 clean: down

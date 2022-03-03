@@ -1,3 +1,5 @@
+MAKEFLAGS += --no-print-directory
+
 .PHONY: all user-service
 all user-service: run
 
@@ -12,7 +14,7 @@ build:
 .PHONY: run
 run: up build sleep migrate-up
 	@echo "----------> Starting User Service..."
-	@bash -c "trap '$(MAKE) clean --no-print-directory' EXIT; ./user-service"
+	@bash -c "trap '$(MAKE) clean' EXIT; ./user-service"
 
 # Used to delay migrations in run command above or else error since docker not fully up
 .PHONY: sleep
