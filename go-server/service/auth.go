@@ -12,9 +12,9 @@ import (
 )
 
 type ValidationResponse struct {
-	UserID string `json:id`
-	Token  string `json:token`
-	Error  string `json:err`
+	UserID string `json:"id"`
+	Token  string `json:"token"`
+	Error  string `json:"error"`
 }
 
 func (s *service) Validate(token string) (string, bool, error) {
@@ -48,6 +48,7 @@ func (s *service) Validate(token string) (string, bool, error) {
 			ContentType: "application/json",
 			Body:        []byte(token),
 			ReplyTo:     "amq.rabbitmq.reply-to",
+			Expiration:  "5000",
 		},
 	)
 	if err != nil {
@@ -70,6 +71,10 @@ func (s *service) Validate(token string) (string, bool, error) {
 		if err := decoder.Decode(&response); err != nil {
 			s.logger.Printf("[ERROR] while decoding message reply: %v", err)
 			return "", false, err
+		}
+
+		if response.Error != "" {
+			return "", false, errors.New(response.Error)
 		}
 
 		return response.UserID, true, nil
