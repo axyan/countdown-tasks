@@ -5,7 +5,7 @@ all user-service: run
 
 .PHONY: install
 install:
-	which migrate || go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	@which migrate || go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 .PHONY: build
 build:
