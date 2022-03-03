@@ -10,12 +10,12 @@ build:
 	go build -o user-service pkg/server/main.go
 
 .PHONY: run
-run: up build sleep-1 migrate-up
+run: up build sleep-1.5 migrate-up
 	bash -c "trap 'make clean' EXIT; ./user-service"
 
-.PHONY: sleep-1
 # Used to delay migrations in run command above or else error since docker not fully up
-sleep-1:
+.PHONY: sleep-1.5
+sleep-1.5:
 	sleep 1.5
 
 .PHONY: clean
@@ -40,5 +40,5 @@ down:
 	docker compose down
 
 .PHONY: postgres-cli-user
-postgres-cli-user:
+postgres-cli-user: up
 	docker exec -it postgres_user_db psql -U user db
