@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -39,10 +39,11 @@ type service struct {
 	config Config
 }
 
-func NewService(name string, config Config) IService {
+func NewService(name string, logger *log.Logger, config Config) IService {
 	return &service{
 		name:   name,
-		logger: log.New(os.Stdout, fmt.Sprintf("[%s Service] ", name), log.LstdFlags),
+		logger: logger,
+		//logger: log.New(os.Stdout, fmt.Sprintf("[%s Service] ", name), log.LstdFlags),
 		config: config,
 	}
 }
@@ -74,44 +75,46 @@ func (s *service) Server() *http.Server {
 func (s *service) Run() (<-chan os.Signal, error) {
 	var err error
 
-	s.broker, err = amqp.Dial(s.config.RabbitMQConnURI)
-	if err != nil {
-		s.logger.Printf("[ERROR] while opening connection to RabbitMQ: %s", err.Error())
-		return nil, err
-	}
-
-	ch, err := s.broker.Channel()
-	if err != nil {
-		s.logger.Printf("[ERROR] while opening RabbitMQ channel: %s", err.Error())
-		return nil, err
-	}
-	defer ch.Close()
-
-	for _, queueName := range s.config.RabbitMQQueues {
-		_, err = ch.QueueDeclare(
-			queueName,
-			false,
-			false,
-			false,
-			false,
-			nil,
-		)
+	if s.config.RabbitMQConnURI != "" {
+		s.broker, err = amqp.Dial(s.config.RabbitMQConnURI)
 		if err != nil {
-			s.logger.Printf("[ERROR] while declaring RabbitMQ queues: %s", err.Error())
+			s.logger.Printf("[ERROR] while opening connection to RabbitMQ: %v", err)
 			return nil, err
+		}
+
+		ch, err := s.broker.Channel()
+		if err != nil {
+			s.logger.Printf("[ERROR] while opening RabbitMQ channel: %v", err)
+			return nil, err
+		}
+		defer ch.Close()
+
+		for _, queueName := range s.config.RabbitMQQueues {
+			_, err = ch.QueueDeclare(
+				queueName,
+				false,
+				false,
+				false,
+				false,
+				nil,
+			)
+			if err != nil {
+				s.logger.Printf("[ERROR] while declaring RabbitMQ queues: %v", err)
+				return nil, err
+			}
 		}
 	}
 
 	if s.config.DBConnURI != "" {
 		s.db, err = sql.Open(s.config.DBDriver, s.config.DBConnURI)
 		if err != nil {
-			s.logger.Printf("[ERROR] while opening sql database: %s", err.Error())
+			s.logger.Printf("[ERROR] while opening sql database: %v", err)
 			return nil, err
 		}
 		// Ensures valid connection since sql.Open does not
 		// always establish a connection to the database
 		if err := s.db.Ping(); err != nil {
-			s.logger.Printf("[ERROR] while pinging sql database: %s", err.Error())
+			s.logger.Printf("[ERROR] while pinging sql database: %v", err)
 			return nil, err
 		}
 	}
@@ -126,6 +129,9 @@ func (s *service) Run() (<-chan os.Signal, error) {
 	})
 	handler := c.Handler(s.router)
 
+	if s.config.Address == "" {
+		return nil, errors.New("no address in config")
+	}
 	s.server = &http.Server{
 		Addr:         s.config.Address,
 		Handler:      logRequestsMiddleware(handler, s.logger),
@@ -144,16 +150,16 @@ func (s *service) Run() (<-chan os.Signal, error) {
 
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			s.logger.Printf("[ERROR] while serving server: %s", err.Error())
+			s.logger.Printf("[ERROR] while serving server: %v", err)
 			s.logger.Println("[INFO] closing all open connections...")
 
 			if err := s.broker.Close(); err != nil {
-				s.logger.Printf("[ERROR] while closing RabbitMQ connection: %s", err.Error())
+				s.logger.Printf("[ERROR] while closing RabbitMQ connection: %v", err)
 			}
 
 			if s.config.DBConnURI != "" {
 				if err := s.db.Close(); err != nil {
-					s.logger.Printf("[ERROR] while closing database connection: %s", err.Error())
+					s.logger.Printf("[ERROR] while closing database connection: %v", err)
 				}
 			}
 
@@ -168,19 +174,21 @@ func (s *service) Run() (<-chan os.Signal, error) {
 func (s *service) Shutdown(ctx context.Context) {
 	s.logger.Println("[STOP] Graceful shutdown initiated")
 
-	if err := s.broker.Close(); err != nil {
-		s.logger.Printf("[ERROR] while closing RabbitMQ connection: %s", err.Error())
+	if s.broker != nil {
+		if err := s.broker.Close(); err != nil {
+			s.logger.Printf("[ERROR] while closing RabbitMQ connection: %v", err)
+		}
 	}
 
-	if s.config.DBConnURI != "" {
+	if s.db != nil {
 		if err := s.db.Close(); err != nil {
-			s.logger.Printf("[ERROR] while closing database connection: %s", err.Error())
+			s.logger.Printf("[ERROR] while closing database connection: %v", err)
 		}
 	}
 
 	s.server.SetKeepAlivesEnabled(false)
 	if err := s.server.Shutdown(ctx); err != nil {
-		s.logger.Printf("[ERROR] while shutting down server: %s", err.Error())
+		s.logger.Printf("[ERROR] while shutting down server: %v", err)
 	}
 
 	s.logger.Println("[STOP] Graceful shutdown completed")

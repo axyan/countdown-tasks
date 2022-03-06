@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
 	"strings"
@@ -28,7 +29,10 @@ type ValidationResponse service.ValidationResponse
 // NewAuthService returns a pointer to a new auth service
 func NewAuthService(config service.Config) *AuthService {
 	return &AuthService{
-		service.NewService("Auth", config),
+		service.NewService(
+			"Auth",
+			log.New(os.Stdout, fmt.Sprintf("[%s Service] ", "Auth"), log.LstdFlags),
+			config),
 		NewBlacklistDB(),
 	}
 }

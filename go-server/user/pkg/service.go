@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"os"
 
 	"github.com/axyan/countdown-tasks/service"
@@ -13,7 +15,10 @@ type UserService struct {
 
 func NewUserService(config service.Config) *UserService {
 	return &UserService{
-		service.NewService("User", config),
+		service.NewService(
+			"User",
+			log.New(os.Stdout, fmt.Sprintf("[%s Service] ", "User"), log.LstdFlags),
+			config),
 	}
 }
 
